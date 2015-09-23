@@ -17,7 +17,6 @@ import bftsmart.tom.ServiceReplica;
 
 
 public class ComputationServer extends DefaultRecoverable {
-	
 	public static int counter = 0;
 	private Log bftLog;
 	public ComputationServer (int id) {
@@ -145,6 +144,8 @@ public class ComputationServer extends DefaultRecoverable {
 			try {
 				if (q.verifySignedDigest() && q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand)){
 					counter += 1;
+					int executionNode = mapToNode(q.rand, q.MAX_SIZE);
+					q.setExecutionNode(executionNode);
 					bftLog.addEntry(counter, q);
 					System.out.println(bftLog.toString());
 					if (q != null){
@@ -189,5 +190,13 @@ public class ComputationServer extends DefaultRecoverable {
 				//ignore close exception
 			}
 		}
+	}
+	
+	//TODO the total number of nodes should be taken dynamically from the configuration of the system
+	private int mapToNode (int random, int maxRange){
+		int totalNumberNodes = 4;
+		double executionNode = (random/(double)maxRange)*totalNumberNodes;
+		System.out.print("(" + random + "/" + maxRange + ")* " + totalNumberNodes + "= " + executionNode);
+		return (int)executionNode;
 	}
 }

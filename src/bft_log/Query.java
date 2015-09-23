@@ -22,13 +22,14 @@ public class Query implements java.io.Serializable {
 	/**
 	 * 
 	 */
-	
 	private static final long serialVersionUID = 12345L;
 	public Set<String> requestedItems = new HashSet<String>();
+	public int MAX_SIZE = (int) Math.pow(2.0, 16.0);
 	public String operation;
 	public int rand;
 	public Date ts;
 	public byte[] digest;
+	public int executionNode;
 	private byte[] signedDigest;
 	private PublicKey pk;
 	private String separator = " ";
@@ -51,7 +52,15 @@ public class Query implements java.io.Serializable {
 	
 	@Override
 	public String toString() {
-		return "Query [requestedItems=" + requestedItems + ", operation=" + operation + ", ts=" + ts + "]";
+		return "Query [requestedItems=" + requestedItems + ", operation=" + operation + ", ts=" + ts + ", Random=" + rand + ", Execution Node= " + executionNode + "]";
+	}
+	
+	public int getExecutionNode() {
+		return executionNode;
+	}
+
+	public void setExecutionNode(int executionNode) {
+		this.executionNode = executionNode;
 	}
 	
 	/*Print the Arguments of the Query*/
@@ -82,7 +91,7 @@ public class Query implements java.io.Serializable {
 	public void initializeQuery() throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.ts = new Date();
 		try {
-				this.rand = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt();
+				this.rand = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt(MAX_SIZE);	//Generates a random value between 0 and 2^16
 			} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
 				e.printStackTrace();
 			}
