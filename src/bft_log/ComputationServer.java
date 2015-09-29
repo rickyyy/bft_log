@@ -19,12 +19,16 @@ import bftsmart.tom.ServiceReplica;
 public class ComputationServer extends DefaultRecoverable {
 	public static int counter = 0;
 	private Log bftLog;
-	public ComputationServer (int id) {
+	private ServiceReplica replica;
+	private UploadServer upserver;
+	
+	public ComputationServer (int id) throws IOException, ClassNotFoundException {
 		bftLog = new Log();
-		new ServiceReplica(id, this, this);
+		replica = new ServiceReplica(id, this, this);
+		upserver = new UploadServer(id);
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NumberFormatException, IOException, ClassNotFoundException {
         if (args.length < 1) {
             System.out.println("Usage: ComputationServer <server id>");
             System.exit(0);
@@ -67,7 +71,6 @@ public class ComputationServer extends DefaultRecoverable {
 		}
 		return null;
 	}
-
 
 	@Override
 	public void installSnapshot(byte[] state) {

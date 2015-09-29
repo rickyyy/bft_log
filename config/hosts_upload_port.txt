@@ -1,0 +1,6 @@
+#server id, address and port (the ids from 0 to n-1 are the service replicas) 
+0 127.0.0.1 22222
+1 127.0.0.1 33333
+2 127.0.0.1 44444
+3 127.0.0.1 55555
+4 127.0.0.1 11111
