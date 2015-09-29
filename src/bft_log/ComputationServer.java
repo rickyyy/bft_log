@@ -53,7 +53,6 @@ public class ComputationServer extends DefaultRecoverable {
 			return resultBytes;
 			
 		} catch (IOException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
@@ -116,20 +115,16 @@ public class ComputationServer extends DefaultRecoverable {
             try {
 				replies[i] = executeOrdered(commands[i],msgCtxs[i]);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
             } else
 				try {
 					executeOrdered(commands[i],null);
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
         }
@@ -145,8 +140,9 @@ public class ComputationServer extends DefaultRecoverable {
 			Query q = (Query) in.readObject();
 			// Proper validation of the signature and digest of the query
 			try {
-				if (q.verifySignedDigest() && q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand)){
+				if (q.ut.verifySignedDigest(q.pk, q.digest, q.signedDigest) && q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand)){
 					counter += 1;
+					System.out.println(String.valueOf(q.rand));
 					int executionNode = mapToNode(q.rand, q.MAX_SIZE);
 					q.setExecutionNode(executionNode);
 					bftLog.addEntry(counter, q);
@@ -164,16 +160,12 @@ public class ComputationServer extends DefaultRecoverable {
 					return resultBytes;
 				}
 			} catch (InvalidKeyException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (NoSuchProviderException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (SignatureException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -196,10 +188,11 @@ public class ComputationServer extends DefaultRecoverable {
 	}
 	
 	//TODO the total number of nodes should be taken dynamically from the configuration of the system
-	private int mapToNode (int random, int maxRange){
+	public int mapToNode (int random, int MAX_SIZE){
 		int totalNumberNodes = 4;
-		double executionNode = (random/(double)maxRange)*totalNumberNodes;
-		System.out.print("(" + random + "/" + maxRange + ")* " + totalNumberNodes + "= " + executionNode);
+		double executionNode = (random/(double)MAX_SIZE)*totalNumberNodes;
+		System.out.print("(" + random + "/" + MAX_SIZE + ")* " + totalNumberNodes + "= " + executionNode);
 		return (int)executionNode;
 	}
+	
 }

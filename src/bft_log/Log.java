@@ -16,9 +16,11 @@ public class Log implements java.io.Serializable {
 	private static final long serialVersionUID = 11111L;
 	private Hashtable<Integer, LogEntry> log;
 	private LogEntry root;
+	private Utils ut;
 	
 	public Log (){
 		this.log = new Hashtable<Integer, LogEntry>();
+		this.ut = new Utils();
 		initialize();
 	}
 	
@@ -29,7 +31,7 @@ public class Log implements java.io.Serializable {
 		rootRequest.add(s);
 		try {
 			Query rootQuery = new Query(rootRequest, "Check");
-			byte[] rootHash = createDigest("ROOT");
+			byte[] rootHash = ut.createDigest("ROOT");
 			root = new LogEntry(rootHash, rootQuery);
 			this.log.put(0, root);
 		} catch (NoSuchAlgorithmException e) {
@@ -77,12 +79,5 @@ public class Log implements java.io.Serializable {
 			result = lastFromIndex.verifyLogEntries(previous, lastFromIndex);
 		}
 		return result;
-	}
-	
-	/* Create a digest for the root */
-	private byte[] createDigest(String message) throws NoSuchAlgorithmException, UnsupportedEncodingException{
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update(message.getBytes("UTF-16"));
-		return md.digest();
 	}
 }

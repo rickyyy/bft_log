@@ -46,7 +46,7 @@ public class TestQuery {
 		
 		q.printQuery();
 		try {
-			boolean verif_signature = q.verifySignedDigest();
+			boolean verif_signature = q.ut.verifySignedDigest(q.pk, q.digest, q.signedDigest);
 			boolean verif_digest = q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand);
 			System.out.println("Verified Signature : " + verif_signature + "\n" +
 							   "Verified Digest: " + verif_digest);

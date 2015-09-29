@@ -23,15 +23,16 @@ public class Query implements java.io.Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 12345L;
-	public Set<String> requestedItems = new HashSet<String>();
 	public int MAX_SIZE = (int) Math.pow(2.0, 16.0);
+	public Set<String> requestedItems = new HashSet<String>();
 	public String operation;
 	public int rand;
 	public Date ts;
 	public byte[] digest;
 	public int executionNode;
-	private byte[] signedDigest;
-	private PublicKey pk;
+	public Utils ut;
+	public PublicKey pk;
+	public byte[] signedDigest;
 	private String separator = " ";
 	private String message = "";
 	
@@ -41,12 +42,14 @@ public class Query implements java.io.Serializable {
 		this.requestedItems = data;
 		this.operation = o;
 		this.pk = pk;
+		this.ut = new Utils();
 	}
 	
 	// Query constructor for ROOT query (for the log)
 	public Query(Set<String> data, String o) throws NoSuchAlgorithmException, UnsupportedEncodingException{
 		this.requestedItems = data;
 		this.operation = o;
+		this.ut = new Utils();
 		initializeRootQuery();
 	}
 	
@@ -85,7 +88,7 @@ public class Query implements java.io.Serializable {
 		this.ts = new Date(1442925151);	//common timestamp among servers to have the same starting point of view (Root query)
 		this.rand = 11111111;			//common random number to have same starting point
 		this.message = messageEncoding(this.requestedItems, this.operation, this.ts, this.rand);
-		this.digest = createDigest(message);
+		this.digest = ut.createDigest(message);
 	}
 	
 	public void initializeQuery() throws NoSuchAlgorithmException, UnsupportedEncodingException {
@@ -96,37 +99,16 @@ public class Query implements java.io.Serializable {
 				e.printStackTrace();
 			}
 		this.message = messageEncoding(this.requestedItems, this.operation, this.ts, this.rand);
-		this.digest = createDigest(message);	
-	}
-
-	/*The digest is signed with the Private Key of the Client*/
-	public void signDigest(PrivateKey sk) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException{
-		Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
-		sig.initSign(sk);
-		sig.update(this.digest);
-		this.signedDigest = sig.sign();
+		this.digest = ut.createDigest(message);	
 	}
 	
-	/* The signed Digest is verified using the public key of the user*/
-	public boolean verifySignedDigest() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException{
-		Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
-		sig.initVerify(this.pk);
-		sig.update(this.digest);
-		return sig.verify(this.signedDigest);
+	public void signDigest(PrivateKey sk) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException{
+		this.signedDigest = ut.signDigest(sk, this.digest);
 	}
 	
 	public boolean verifyHash(Set<String> items, String op, Date timestamp, int r) throws NoSuchAlgorithmException, UnsupportedEncodingException{
 		String s = messageEncoding(items, op, timestamp, r);
-		byte[] verify = createDigest(s);
-		//System.out.println("Verified Hash : " + DigestToHex(verify) + "\n");
-		return Arrays.equals(verify, this.digest);
-	}
-	
-	/* Create a digest of the message that contains the parameters of the query*/
-	private byte[] createDigest(String message) throws NoSuchAlgorithmException, UnsupportedEncodingException{
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update(message.getBytes("UTF-16"));
-		return md.digest();
+		return ut.verifyHash(s, this.digest);
 	}
 	
 	/*Encode the attributes of a Query into a single string.*/
