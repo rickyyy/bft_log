@@ -10,7 +10,6 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Set;
 
 import bft_log.Utils;
 
