@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import bft_log.update.UploadClient;
+
 
 public class ComputationClient {
 	
@@ -52,8 +54,8 @@ public class ComputationClient {
 		PrivateKey sk = pair.getPrivate();
 		
 		//Instance of the Update protocol
-		//UploadClient up = new UploadClient();
-		//up.uploadClient();
+		UploadClient up = new UploadClient(pk, sk);
+		up.uploadClient();
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {
@@ -65,7 +67,7 @@ public class ComputationClient {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		generateRequest(request, queryProxy);
+		//generateRequest(request, queryProxy);
 	}
 	
 	// Method to sends a request that uses the Byzantine consensus protocol with invokeOrdered()

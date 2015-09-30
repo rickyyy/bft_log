@@ -1,4 +1,4 @@
-package bft_log;
+package bft_log.update;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
+import bft_log.ComputationConfig;
+import bft_log.Host;
 
 
 public class UploadClient {
@@ -13,9 +18,13 @@ public class UploadClient {
 	//private File file;
 	//private Set<byte[]> shares;
 	private ComputationConfig config;
+	private PublicKey pk;
+	private PrivateKey sk;
 	
-	public UploadClient(){
+	public UploadClient(PublicKey pk, PrivateKey sk){
 		this.config = new ComputationConfig();
+		this.pk = pk;
+		this.sk = sk;
 	}
 	
 	//The client connects to each single server and it does independent uploads. Now it works in sequence. Having multiple threads opening different sockets could be an alternative.
@@ -35,6 +44,9 @@ public class UploadClient {
 				out = new ObjectOutputStream(sock.getOutputStream());
 				in = new ObjectInputStream(sock.getInputStream());
 				UploadMessage msg = new UploadMessage(1, s.getId(), shareValue, "root");
+				msg.setSignedDigest(sk);
+				msg.setPk(pk);
+				System.out.println(msg.toString());
 				out.writeObject(msg);
 				UploadMessage msgFromServer = null;
 				msgFromServer = (UploadMessage) in.readObject();

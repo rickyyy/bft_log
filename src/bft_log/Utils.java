@@ -40,6 +40,11 @@ public class Utils implements Serializable {
 		return sig.sign();
 	}
 	
+	@Override
+	public String toString() {
+		return "Utils [is Existing]";
+	}
+
 	/* The signed Digest is verified using the public key of the user*/
 	public boolean verifySignedDigest(PublicKey pk, byte[] digest, byte[] signedDigest) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException{
 		Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
