@@ -48,7 +48,6 @@ public class UploadMessage implements Serializable{
 				+ policyGroup + ", ts=" + ts.toString() + ", signedDigest=" + Arrays.toString(signedDigest) + ", pk=" + pk.toString() + "]";
 	}
 
-
 	private void initializeDigest(){
 		ut = new Utils();
 		String msg = uploadMessageEncoding();
@@ -61,6 +60,14 @@ public class UploadMessage implements Serializable{
 		}
 	}
 
+	public boolean isAcknowledge() {
+		return acknowledge;
+	}
+
+	public void setAcknowledge() {
+		this.acknowledge = true;
+	}
+
 	public byte[] getSignedDigest() {
 		return signedDigest;
 	}
@@ -69,7 +76,6 @@ public class UploadMessage implements Serializable{
 		try {
 			this.signedDigest = ut.signDigest(sk, this.signedDigest);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -93,16 +99,17 @@ public class UploadMessage implements Serializable{
 		return id;
 	}
 
+	public int getNodeId() {
+		return nodeId;
+	}
+
+
 	public byte[] getShare() {
 		return share;
 	}
 
 	public String getPolicyGroup() {
 		return policyGroup;
-	}
-	
-	public void receivedUploadMessage(){
-		this.acknowledge = true;
 	}
 	
 }

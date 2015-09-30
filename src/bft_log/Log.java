@@ -24,7 +24,6 @@ public class Log implements java.io.Serializable {
 		initialize();
 	}
 	
-	/* TODO implement initialization of the log*/
 	private void initialize(){
 		String s = "ROOT";
 		HashSet<String> rootRequest = new HashSet<String>();
@@ -35,10 +34,8 @@ public class Log implements java.io.Serializable {
 			root = new LogEntry(rootHash, rootQuery);
 			this.log.put(0, root);
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -1,4 +1,4 @@
-package bft_log.Tests;
+package bft_log.tests;
 
 
 import java.io.UnsupportedEncodingException;

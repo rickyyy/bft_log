@@ -29,6 +29,7 @@ public class UploadClient {
 	
 	//The client connects to each single server and it does independent uploads. Now it works in sequence. Having multiple threads opening different sockets could be an alternative.
 	public void uploadClient() throws ClassNotFoundException, IOException{
+		
 		ObjectOutputStream out = null;
 		ObjectInputStream in = null;
 		String exampleShare = "ExampleShare";
@@ -43,13 +44,14 @@ public class UploadClient {
 				Socket sock = new Socket(s.getIp().getHostString(), s.getPort());
 				out = new ObjectOutputStream(sock.getOutputStream());
 				in = new ObjectInputStream(sock.getInputStream());
-				UploadMessage msg = new UploadMessage(1, s.getId(), shareValue, "root");
+				UploadMessage msg = new UploadMessage(2, s.getId(), shareValue, "root");
 				msg.setSignedDigest(sk);
 				msg.setPk(pk);
 				System.out.println(msg.toString());
 				out.writeObject(msg);
-				UploadMessage msgFromServer = null;
-				msgFromServer = (UploadMessage) in.readObject();
+				AcknowledgeUploadMessage msgFromServer = null;
+				msgFromServer = (AcknowledgeUploadMessage) in.readObject();
+				//TODO Implement a verification that tries to match if the Acknowledgment is good for the UploadMessage sent earlier.
 				//System.out.print(msgFromServer.toString() + "\n");
 				counterAck += 1;
 				sock.close();

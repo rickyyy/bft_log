@@ -14,7 +14,8 @@ public class ComputationConfig {
 		this.listServer = listServer();
 	}
 	
-	// TODO Allows the client to retrieve the information of the existing servers and sends them data independently.
+	// Allows the client to retrieve the information of the existing servers and sends them data independently.
+	// TODO add check regarding the list of server "shorter" than the number of nodes required OR loads dynamically the content of the file and set f t and n.
 	private ArrayList<Host> listServer(){
 		HostsConfig hc = new HostsConfig("/Users/BortolameottiR/workspace/bft_log/config", "hosts_upload_port.txt");
 		listServer = new ArrayList<Host>();
