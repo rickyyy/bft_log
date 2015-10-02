@@ -32,6 +32,12 @@ public class Utils implements Serializable {
 		return md.digest();
 	}
 	
+	public byte[] hashBytes(byte[] input) throws NoSuchAlgorithmException{
+		MessageDigest md = MessageDigest.getInstance(digestAlg);
+		md.update(input);
+		return md.digest();
+	}
+	
 	/*The digest is signed with the Private Key of the Client*/
 	public byte[] signDigest(PrivateKey sk, byte[] digest) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException{
 		Signature sig = Signature.getInstance(signAlg, signProv);
