@@ -21,7 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import bft_log.Utils;
 
-public class AontRS {
+public class Aont {
 	private String cryptoAlgorithm = "AES";
 	private Utils ut;
 	private int sizePadding;
@@ -30,7 +30,7 @@ public class AontRS {
 	private int keySize = wordSize*8;
 	public byte[] aontPackage;
 	
-	public AontRS(File f) throws FileNotFoundException{
+	public Aont(File f) throws FileNotFoundException{
 		ut = new Utils();
 		try {
 			this.aontPackage = AontEncoding(f);
@@ -38,6 +38,10 @@ public class AontRS {
 				| BadPaddingException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void getAontEncodedPackageAsFile(String filePath){
+		getFileFromBytes(this.aontPackage, filePath);
 	}
 	
 	public byte[] AontEncoding(File f) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
@@ -180,7 +184,7 @@ public class AontRS {
 		return res;
 	}
 	
-	private byte[] getBytesFromFile(File f) throws FileNotFoundException{
+	public byte[] getBytesFromFile(File f) throws FileNotFoundException{
 		byte[] fileToBytes;
 		FileInputStream fis = new FileInputStream(f);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
