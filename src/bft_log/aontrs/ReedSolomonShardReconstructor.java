@@ -9,16 +9,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public class ReedSolomonShardReconstructor {
-	private int DATA_SHARDS = 2;
-    private int PARITY_SHARDS = 2;
-    private int TOTAL_SHARDS = 4;
+import bft_log.ComputationConfig;
 
+public class ReedSolomonShardReconstructor {
+	private ComputationConfig config;
+	private int DATA_SHARDS = config.t;		//t	
+    private int PARITY_SHARDS = config.n-config.t;	//n-t
+    private int TOTAL_SHARDS = config.n;
     private int BYTES_IN_INT = 4;
     private File file;
     
     public ReedSolomonShardReconstructor(File f) throws IOException{
     	this.file = f;
+		this.config = new ComputationConfig();
     	ShardReconstruction();
     }
     

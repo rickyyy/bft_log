@@ -1,5 +1,6 @@
 package bft_log.update;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,6 +26,7 @@ public class UploadServer {
 	private ComputationConfig conf;
 	private Utils ut;
 	private Hashtable<Integer, ShareStorage> store;	//Storage in the future can also be implemented through a SQL DB. For simplicity we use a Hashmap in memory.
+	private String serverDiskPath;
 	
 	public UploadServer(int id) throws IOException, ClassNotFoundException{
 		this.id = id;
@@ -40,6 +42,18 @@ public class UploadServer {
 		Host h = conf.listServer.get(id); 
 		this.PORT = h.getPort();
 		this.uploadChannel = new ServerSocket(PORT);
+		serverEnvironment();
+	}
+	
+	private void serverEnvironment(){
+		this.serverDiskPath = conf.appPath + "test/server" + String.valueOf(this.id);
+		File folder = new File(serverDiskPath);
+		if (folder.mkdirs()){
+			System.out.println("Server Folder Created Successfully!!!");
+		}
+		else {
+			System.out.println("Failed to Create the Server Folder - Or it already exists");
+		}
 	}
 	
 	private void startUploadServer() throws IOException, ClassNotFoundException{
@@ -53,8 +67,9 @@ public class UploadServer {
 			UploadMessage recMsg = (UploadMessage) inFromClient.readObject();
 			
 			//Incoming message is verified
-			if (verifyUploadMessage(recMsg) && storeShare(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
+			if (verifyUploadMessage(recMsg) && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
 				recMsg.setAcknowledge();
+				storeShareOnDisk(recMsg);
 				AcknowledgeUploadMessage ack = new AcknowledgeUploadMessage(recMsg.getId(), recMsg.getNodeId(), recMsg.getSignedDigest());
 				outToClient.writeObject(ack);
 			} else {
@@ -84,7 +99,7 @@ public class UploadServer {
 		return verify;
 	}
 	
-	private boolean storeShare(Integer id, byte[] share, String policy){
+	private boolean storeShareInMemory(Integer id, byte[] share, String policy){
 		ShareStorage ss = new ShareStorage(share, policy);
 		if (store.get(id)==null){
 			store.put(id, ss);
@@ -95,5 +110,10 @@ public class UploadServer {
 			System.out.println("COLLISION!!! A Share with same ID has been already stored.");
 			return false;
 		}
+	}
+	
+	private void storeShareOnDisk(UploadMessage u){
+		String onDiskPath = serverDiskPath + "/" + u.getId() + ".share" + String.valueOf(this.id);
+		ut.getFileFromBytes(u.getShare(), onDiskPath);
 	}
 }

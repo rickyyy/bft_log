@@ -49,7 +49,6 @@ public class Aont {
 			this.aontPackage = getBytesFromFile(f);
 			this.aontPackage = appendCanaryToData();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -213,7 +212,6 @@ public class Aont {
 			fos.write(bytesOfFile);
 			fos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

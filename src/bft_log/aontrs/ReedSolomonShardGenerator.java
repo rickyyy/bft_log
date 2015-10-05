@@ -9,17 +9,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+import bft_log.ComputationConfig;
+
 public class ReedSolomonShardGenerator {
 	private File file;
+	private ComputationConfig config;
 	//these values are in case f=1 TODO we need to make it automatic
-	private int DATA_SHARDS = 2;	//t	
-    private int PARITY_SHARDS = 2;	//n-t
-    private int TOTAL_SHARDS = 4;	//n
+	private int DATA_SHARDS = config.t;		//t	
+    private int PARITY_SHARDS = config.n-config.t;	//n-t
+    private int TOTAL_SHARDS = config.n;	//n
 
     private int BYTES_IN_INT = 4;
 
 	public ReedSolomonShardGenerator(File f) throws IOException{
 		this.file = f;
+		this.config = new ComputationConfig();
 		ShardGenerator();
 	}
 

@@ -3,6 +3,7 @@ package bft_log;
 import bftsmart.tom.ServiceProxy;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -44,9 +45,11 @@ public class ComputationClient {
 		PublicKey pk = pair.getPublic();
 		PrivateKey sk = pair.getPrivate();
 		
+		//File to upload
+		File f = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test1");
 		//Instance of the Update protocol
 		UploadClient up = new UploadClient(pk, sk);
-		up.uploadClient();
+		up.uploadClientFile(f);
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {
