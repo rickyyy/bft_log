@@ -14,7 +14,8 @@ import java.security.SignatureException;
 import java.util.HashSet;
 import java.util.Set;
 
-import bft_log.Query;
+import bft_log.query.QueryMessage;
+
 
 
 public class TestQuery {
@@ -35,7 +36,7 @@ public class TestQuery {
 		// Operation to compute
 		String o = "count";
 		
-		Query q = new Query(requestedItems, o, pk);
+		QueryMessage q = new QueryMessage(requestedItems, o, pk);
 		q.initializeQuery();
 		try {
 			q.signDigest(sk);

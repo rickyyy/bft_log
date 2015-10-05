@@ -1,4 +1,6 @@
-package bft_log;
+package bft_log.query;
+
+
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,34 +13,38 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 
+import bft_log.ComputationConfig;
+import bft_log.Log;
 import bft_log.update.UploadServer;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.server.defaultservices.DefaultRecoverable;
 import bftsmart.tom.ServiceReplica;
 
 
-public class ComputationServer extends DefaultRecoverable {
-	public static int counter = 0;
+public class QueryServer extends DefaultRecoverable {
+	private int myId;
+	public static int counter = 0;	//It is used as entry index for the log. Constantly increasing.
 	private Log bftLog;
 	private ServiceReplica replica;
-	private UploadServer upserver;
+	private UploadServer upServer;
+	private boolean iAmExecutionNode;
+	private ComputationConfig config;
 	
-	public ComputationServer (int id) throws IOException, ClassNotFoundException {
-		bftLog = new Log();
-		replica = new ServiceReplica(id, this, this);
-		upserver = new UploadServer(id);
+	public QueryServer (int id) throws IOException, ClassNotFoundException {
+		this.myId = id;
+		this.bftLog = new Log();
+		this.replica = new ServiceReplica(id, this, this);
 	}
 	
-	public static void main(String[] args) throws NumberFormatException, IOException, ClassNotFoundException {
-        if (args.length < 1) {
-            System.out.println("Usage: ComputationServer <server id>");
-            System.exit(0);
-        }
+	public void setUpServer(UploadServer upServer) {
+		this.upServer = upServer;
+	}
 
-        new ComputationServer(Integer.parseInt(args[0]));
-		System.out.println("Server Created");
-    }
-
+	public void setConfig(ComputationConfig config) {
+		this.config = config;
+	}
+	
+	// This method is never used, because we always want to execute all the operations in order.
 	@Override
 	public byte[] executeUnordered(byte[] command, MessageContext msgCtx) {
 		ByteArrayInputStream bis = new ByteArrayInputStream(command);
@@ -46,7 +52,7 @@ public class ComputationServer extends DefaultRecoverable {
 		try {
 			in = new ObjectInputStream(bis);
 			byte[] resultBytes = null;
-			Query q = (Query) in.readObject();
+			QueryMessage q = (QueryMessage) in.readObject();
 			q.printQuery();
 			if (q != null){
 				resultBytes = q.toString().getBytes();
@@ -109,7 +115,6 @@ public class ComputationServer extends DefaultRecoverable {
 
 	@Override
 	public byte[][] appExecuteBatch(byte[][] commands, MessageContext[] msgCtxs) {
-		System.out.println("I am in appExecuteBatch");
 		byte [][] replies = new byte[commands.length][];
         for (int i = 0; i < commands.length; i++) {
             if(msgCtxs != null && msgCtxs[i] != null) {
@@ -138,7 +143,7 @@ public class ComputationServer extends DefaultRecoverable {
 		try {
 			in = new ObjectInputStream(bis);
 			byte[] resultBytes = null;
-			Query q = (Query) in.readObject();
+			QueryMessage q = (QueryMessage) in.readObject();
 			// Proper validation of the signature and digest of the query
 			try {
 				if (q.ut.verifySignedDigest(q.pk, q.digest, q.signedDigest) && q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand)){
@@ -148,6 +153,10 @@ public class ComputationServer extends DefaultRecoverable {
 					q.setExecutionNode(executionNode);
 					bftLog.addEntry(counter, q);
 					System.out.println(bftLog.toString());
+					if (executionNode != this.myId){
+						System.out.println("I AM NODE " + String.valueOf(this.myId) + " AND I AM NOT THE EXECUTION NODE");
+						upServer.sendShare(q);
+					}
 					if (q != null){
 						resultBytes = q.toString().getBytes();
 					}
@@ -188,9 +197,8 @@ public class ComputationServer extends DefaultRecoverable {
 		}
 	}
 	
-	//TODO the total number of nodes should be taken dynamically from the configuration of the system
 	public int mapToNode (int random, int MAX_SIZE){
-		int totalNumberNodes = 4;
+		int totalNumberNodes = this.config.n;
 		double executionNode = (random/(double)MAX_SIZE)*totalNumberNodes;
 		System.out.print("(" + random + "/" + MAX_SIZE + ")* " + totalNumberNodes + "= " + executionNode);
 		return (int)executionNode;

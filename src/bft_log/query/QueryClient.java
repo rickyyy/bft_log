@@ -1,4 +1,6 @@
-package bft_log;
+package bft_log.query;
+
+
 
 import bftsmart.tom.ServiceProxy;
 
@@ -21,10 +23,10 @@ import java.util.Set;
 import bft_log.update.UploadClient;
 
 
-public class ComputationClient {
+public class QueryClient {
 	
 	public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, ClassNotFoundException{
-		Query request = null;
+		QueryMessage request = null;
 		if(args.length < 1) {
 			System.out.println("Usage: java ComputationClient <process id>");
 			System.exit(-1);
@@ -34,7 +36,7 @@ public class ComputationClient {
 		
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
-		items.add("123456789.docx");
+		items.add("Test1");
 		String operation = "count";
 		
 		//Generate a key pair for the client
@@ -48,12 +50,12 @@ public class ComputationClient {
 		//File to upload
 		File f = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test1");
 		//Instance of the Update protocol
-		UploadClient up = new UploadClient(pk, sk);
-		up.uploadClientFile(f);
+		//UploadClient up = new UploadClient(pk, sk);
+		//up.uploadClientFile(f);
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {
-			request = new Query(items, operation, pk);
+			request = new QueryMessage(items, operation, pk);
 			request.initializeQuery();
 			request.signDigest(sk);
 		} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
@@ -61,11 +63,11 @@ public class ComputationClient {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//generateRequest(request, queryProxy);
+		generateRequest(request, queryProxy);
 	}
 	
 	// Method to sends a request that uses the Byzantine consensus protocol with invokeOrdered()
-	static public String generateRequest(Query q, ServiceProxy proxy) throws IOException{
+	static public String generateRequest(QueryMessage q, ServiceProxy proxy) throws IOException{
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		try {

@@ -2,6 +2,9 @@ package bft_log;
 
 import java.util.Arrays;
 
+import bft_log.query.QueryMessage;
+
+
 public class LogEntry implements java.io.Serializable {
 	/**
 	 * 
@@ -9,9 +12,9 @@ public class LogEntry implements java.io.Serializable {
 	private static final long serialVersionUID = 22222L;
 	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	private byte[] previousQueryDigest;
-	private Query query;
+	private QueryMessage query;
 	
-	public LogEntry(byte[] digest, Query query){
+	public LogEntry(byte[] digest, QueryMessage query){
 		this.previousQueryDigest = digest;
 		this.query = query;
 	}
@@ -40,11 +43,11 @@ public class LogEntry implements java.io.Serializable {
 		this.previousQueryDigest = previousQueryDigest;
 	}
 
-	public Query getQuery() {
+	public QueryMessage getQuery() {
 		return query;
 	}
 
-	public void setCurrentQuery(Query currentQuery) {
+	public void setCurrentQuery(QueryMessage currentQuery) {
 		this.query = currentQuery;
 	}
 	

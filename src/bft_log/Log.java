@@ -7,6 +7,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
+import bft_log.query.QueryMessage;
+
+
 public class Log implements java.io.Serializable {
 	/**
 	 * 
@@ -27,7 +30,7 @@ public class Log implements java.io.Serializable {
 		HashSet<String> rootRequest = new HashSet<String>();
 		rootRequest.add(s);
 		try {
-			Query rootQuery = new Query(rootRequest, "Check");
+			QueryMessage rootQuery = new QueryMessage(rootRequest, "Check");
 			byte[] rootHash = ut.createDigest("ROOT");
 			root = new LogEntry(rootHash, rootQuery);
 			this.log.put(0, root);
@@ -53,9 +56,9 @@ public class Log implements java.io.Serializable {
 		return print;
 	}
 
-	public void addEntry(Integer id, Query current){
+	public void addEntry(Integer id, QueryMessage current){
 		LogEntry previous = this.log.get(id-1);
-		Query prevQuery = previous.getQuery();
+		QueryMessage prevQuery = previous.getQuery();
 		LogEntry newEntry = new LogEntry(prevQuery.digest, current);
 		this.log.put(id, newEntry);
 	}

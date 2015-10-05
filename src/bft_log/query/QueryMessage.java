@@ -1,4 +1,5 @@
-package bft_log;
+package bft_log.query;
+
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -14,14 +15,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import bft_log.Utils;
 
-public class Query implements java.io.Serializable {
+
+public class QueryMessage implements java.io.Serializable {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 12345L;
+	private static final long serialVersionUID = -7836836376114345990L;
+	private String separator = " ";
+	private String message = "";
 	public int MAX_SIZE = (int) Math.pow(2.0, 16.0);
+	public int id; //TODO SET ID TO THE QUERY MESSAGE AUTOMATICALLY!
 	public Set<String> requestedItems = new HashSet<String>();
 	public String operation;
 	public int rand;
@@ -31,24 +37,28 @@ public class Query implements java.io.Serializable {
 	public Utils ut;
 	public PublicKey pk;
 	public byte[] signedDigest;
-	private String separator = " ";
-	private String message = "";
 	
 	
 	// initialization of the query. 
-	public Query(Set<String> data, String o, PublicKey pk){
+	public QueryMessage(Set<String> data, String o, PublicKey pk){
 		this.requestedItems = data;
 		this.operation = o;
 		this.pk = pk;
 		this.ut = new Utils();
 	}
 	
-	// Query constructor for ROOT query (for the log)
-	public Query(Set<String> data, String o) throws NoSuchAlgorithmException, UnsupportedEncodingException{
+	// Query constructor for ROOT query. This is used to initialize the status of the log of the servers.
+	public QueryMessage(Set<String> data, String o) throws NoSuchAlgorithmException, UnsupportedEncodingException{
 		this.requestedItems = data;
 		this.operation = o;
 		this.ut = new Utils();
 		initializeRootQuery();
+	}
+	
+	/*Encode the attributes of a Query into a single string.*/
+	private String messageEncoding(Set<String> items, String op, Date timestamp, int r){
+		String s = "" + String.valueOf(items.hashCode()) + separator + op + separator + timestamp.toString() + separator + String.valueOf(r);
+		return s;
 	}
 	
 	@Override
@@ -64,7 +74,7 @@ public class Query implements java.io.Serializable {
 		this.executionNode = executionNode;
 	}
 	
-	/*Print the Arguments of the Query*/
+	//Mainly used for debug.
 	public void printQuery(){
 		Iterator<String> iter = this.requestedItems.iterator();
 		String filename = "";
@@ -108,11 +118,4 @@ public class Query implements java.io.Serializable {
 		String s = messageEncoding(items, op, timestamp, r);
 		return ut.verifyHash(s, this.digest);
 	}
-	
-	/*Encode the attributes of a Query into a single string.*/
-	private String messageEncoding(Set<String> items, String op, Date timestamp, int r){
-		String s = "" + String.valueOf(items.hashCode()) + separator + op + separator + timestamp.toString() + separator + String.valueOf(r);
-		return s;
-	}
-
 }

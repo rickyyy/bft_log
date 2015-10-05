@@ -1,23 +1,30 @@
 package bft_log.update;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import bft_log.ComputationConfig;
 import bft_log.Host;
 import bft_log.ShareStorage;
 import bft_log.Utils;
+import bft_log.query.ExecutionMessage;
+import bft_log.query.QueryMessage;
 
 public class UploadServer {
 	private int id;
@@ -34,8 +41,6 @@ public class UploadServer {
 		this.ut = new Utils();
 		this.store = new Hashtable<Integer, ShareStorage>();
 		System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
-		initializeUploadServer();
-		startUploadServer();
 	}
 	
 	private void initializeUploadServer() throws IOException{
@@ -56,7 +61,8 @@ public class UploadServer {
 		}
 	}
 	
-	private void startUploadServer() throws IOException, ClassNotFoundException{
+	public void startUploadServer() throws IOException, ClassNotFoundException{
+		initializeUploadServer();
 		while(true){
 			Socket clientSocket = uploadChannel.accept();
 
@@ -64,18 +70,27 @@ public class UploadServer {
 			ObjectInputStream inFromClient = new ObjectInputStream(clientSocket.getInputStream());
 			
 			//Receive the incoming message from the connected client.
-			UploadMessage recMsg = (UploadMessage) inFromClient.readObject();
+			Object obj = inFromClient.readObject();
 			
-			//Incoming message is verified
-			if (verifyUploadMessage(recMsg) && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
-				recMsg.setAcknowledge();
-				storeShareOnDisk(recMsg);
-				AcknowledgeUploadMessage ack = new AcknowledgeUploadMessage(recMsg.getId(), recMsg.getNodeId(), recMsg.getSignedDigest());
-				outToClient.writeObject(ack);
+			if (obj instanceof UploadMessage){	
+				UploadMessage recMsg = (UploadMessage) obj;
+				if (verifyUploadMessage(recMsg) && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
+					recMsg.setAcknowledge();
+					storeShareOnDisk(recMsg);
+					AcknowledgeUploadMessage ack = new AcknowledgeUploadMessage(recMsg.getId(), recMsg.getNodeId(), recMsg.getSignedDigest());
+					outToClient.writeObject(ack);
+				} else {
+					System.out.println("Upload Message Signature OR Digest Not Valid! Message Discarded\n");
+				}
+			} else if (obj instanceof ExecutionMessage){
+				ExecutionMessage exec = (ExecutionMessage) obj;
+				ut.getFileFromBytes(exec.getShardSent(), this.serverDiskPath + "/" + exec.getItemRequested().hashCode() + ".share" + String.valueOf(this.id));
+				System.out.println("Execution Message from Node " + exec.getSendingNode());
+				System.out.println("ExecMessage (exNode, ItemReq): " + exec.getExecutionNode() + " " + exec.getItemRequested());
+				outToClient.writeObject(exec);
 			} else {
-				System.out.println("Upload Message Signature OR Digest Not Valid! Message Discarded\n");
+				System.out.println("Object Not Recognized.");
 			}
-			//System.out.println("Message received: " + String.valueOf(recMsg.getId()));
 			outToClient.close();
 			clientSocket.close();
 		}
@@ -116,4 +131,28 @@ public class UploadServer {
 		String onDiskPath = serverDiskPath + "/" + u.getId() + ".share" + String.valueOf(this.id);
 		ut.getFileFromBytes(u.getShare(), onDiskPath);
 	}
+	
+	public void sendShare(QueryMessage q){
+		ExecutionMessage exec = new ExecutionMessage(q);
+		Host exNode = this.conf.listServer.get(exec.getExecutionNode());
+		for (String s : q.requestedItems){
+			Path path = Paths.get(this.serverDiskPath + "/" + s.hashCode() + ".share" + String.valueOf(this.id));
+			try {
+				byte[] shard = Files.readAllBytes(path);
+				exec.setItemRequested(s);
+				exec.setShardToSend(shard);
+				exec.setSendingNode(this.id);
+				Socket sock = new Socket(exNode.getIp().getHostString(), exNode.getPort());
+				ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+				ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+				out.writeObject(exec);
+				ExecutionMessage miao = (ExecutionMessage) in.readObject();
+				System.out.println(String.valueOf(miao.getItemRequested()));
+				sock.close();
+			} catch (IOException | ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
+
