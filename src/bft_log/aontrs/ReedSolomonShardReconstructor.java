@@ -26,6 +26,19 @@ public class ReedSolomonShardReconstructor {
     	ShardReconstruction();
     }
     
+    public void ShardDeletion(int dontDeleteMyShard){
+    	for (int i = 0; i<TOTAL_SHARDS; i++){
+    		if (i != dontDeleteMyShard){
+    			File shardFile = new File(
+                        this.file.getParentFile(),
+                        this.file.getName() + ".share" + i);
+        		if (shardFile.exists()){
+        			shardFile.delete();
+        		}
+    		}
+    	}
+    }
+    
     public void ShardReconstruction() throws IOException{
     	// Read in any of the shards that are present.
         // (There should be checking here to make sure the input

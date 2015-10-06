@@ -167,6 +167,7 @@ public class UploadServer {
 			File fileToDecode = new File(pathReconstructed + ".decoded");
 			Aont encodedAont = new Aont(fileToDecode);
 			byte[] decodedAont = encodedAont.AontDecoding(encodedAont.aontPackage, pathReconstructed);
+			rsr.ShardDeletion(this.id);
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
