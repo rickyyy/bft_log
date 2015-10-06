@@ -19,6 +19,7 @@ public class ReedSolomonShardReconstructor {
     private int BYTES_IN_INT = 4;
     private File file;
     
+    //Give the name (prefix) of a requested file. It reconstruct the original file from its shares.
     public ReedSolomonShardReconstructor(File f) throws IOException{
     	this.file = f;
 		this.config = new ComputationConfig();
@@ -36,7 +37,7 @@ public class ReedSolomonShardReconstructor {
         for (int i = 0; i < TOTAL_SHARDS; i++) {
             File shardFile = new File(
                     this.file.getParentFile(),
-                    this.file.getName() + "." + i);
+                    this.file.getName() + ".share" + i);
             if (shardFile.exists()) {
                 shardSize = (int) shardFile.length();
                 shards[i] = new byte [shardSize];

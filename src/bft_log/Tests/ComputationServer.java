@@ -1,4 +1,4 @@
-package bft_log.tests;
+package bft_log.Tests;
 
 import java.io.IOException;
 

@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/bin/BFT-SMaRt.jar" sourcepath="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/src">
+	<classpathentry kind="lib" path="/home/riccardo/bft_log/library-BFT-SMaRt-v1.0-beta/bin/BFT-SMaRt.jar" sourcepath="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/src">
 		<attributes>
 			<attribute name="javadoc_location" value="file:/D:/Profiles/BortolameottiR/Desktop/My%20Distributed%20System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/doc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/secretshare-v1.1.jar" sourcepath="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/secretshare-master/secretshare-master/buildSrc/src"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/lib/commons-codec-1.5.jar"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/lib/core-0.1.4.jar"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/lib/netty-all-4.0.25.Final.jar"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/lib/slf4j-api-1.5.8.jar"/>
-	<classpathentry kind="lib" path="D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/lib/slf4j-jdk14-1.5.8.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.5.jar"/>
+	<classpathentry kind="lib" path="lib/core-0.1.4.jar"/>
+	<classpathentry kind="lib" path="lib/netty-all-4.0.25.Final.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.5.8.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-jdk14-1.5.8.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre1.8.0_60"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -6,8 +6,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import bft_log.ComputationConfig;
 import bft_log.Host;
@@ -35,22 +41,30 @@ public class UploadClient {
 	
 	public void uploadClientFile(File f){
 		try {
-			Aont fileAontPackage = new Aont(f);
+			
+			//Generate an AONT package
+			Aont fileAontPackage = new Aont();
+			fileAontPackage.aontPackage = fileAontPackage.AontEncoding(f);
 			aontPath = f.getAbsolutePath() + ".aont";
 			fileAontPackage.getAontEncodedPackageAsFile(aontPath);
+			
+			//Generates shards of the AONT package
 			File packageToShard = new File (aontPath);
 			ReedSolomonShardGenerator shardGen = new ReedSolomonShardGenerator(packageToShard);
 			shardGen.ShardGenerator();
 			int idFile = f.getName().hashCode();
-			//TODO set id of the file
+				
+			//Call the upload Protocol.
 			uploadClientProtocol(idFile, packageToShard);
 			
-		} catch (IOException | ClassNotFoundException e) {
+		} catch (IOException | ClassNotFoundException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	//The client connects to each single server and it does independent uploads. Now it works in sequence. Having multiple threads opening different sockets could be an alternative.
+	// The client connects to each Server independently.
+	// To each server, one specific shard is sent.
+	// A Server receives one shard per ID.
 	public void uploadClientProtocol(int id ,File share) throws ClassNotFoundException, IOException{
 		ObjectOutputStream out = null;
 		ObjectInputStream in = null;
@@ -60,25 +74,39 @@ public class UploadClient {
 			Host s = config.listServer.get(i);
 			String ipSocket = s.getIp().toString();
 			try{
-				File shardFile = new File (share.getParentFile(), share.getName() + "." + i);
+				//Prepare the Shard i.
+				File shardFile = new File (share.getParentFile(), share.getName() + ".share" + i);
 				byte[] shareValue = ut.getBytesFromFile(shardFile);
-			    //System.out.println("Connecting to ... " + ipSocket.toString() + "\n");
+				
+				//Connects to Node i.
 				Socket sock = new Socket(s.getIp().getHostString(), s.getPort());
 				out = new ObjectOutputStream(sock.getOutputStream());
 				in = new ObjectInputStream(sock.getInputStream());
+				
+				//Generates an UploadMessage for the specific data item
 				UploadMessage msg = new UploadMessage(id, s.getId(), shareValue, "root");
+				
+				//Sign message and includes public key.
 				msg.setSignedDigest(sk);
 				msg.setPk(pk);
-				System.out.println(msg.toString());
+				
+				//Forwards UploadMessage to Node i.
 				out.writeObject(msg);
+				
+				//Receives an Acknowledge Message from Node i.
 				AcknowledgeUploadMessage msgFromServer = null;
 				msgFromServer = (AcknowledgeUploadMessage) in.readObject();
+				
+				
 				//TODO Implement a verification that tries to match if the Acknowledgment is good for the UploadMessage sent earlier.
-				//System.out.print(msgFromServer.toString() + "\n");
+
+				//Updates the counter of ACK messages received.
 				counterAck += 1;
 				
 				//TODO here I am just using a trick, that stops to sends after he successfully sent to n nodes. 
 				//It would be better if the configuration would load the list of the n nodes. (now we have more than n, and some are not active).
+				
+				//If it receives N ACK messages, the Protocol has been completed successfully.
 				if (counterAck == config.n){
 					System.out.println("Upload Protocol terminated successfully");
 					sock.close();

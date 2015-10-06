@@ -14,13 +14,13 @@ import bft_log.ComputationConfig;
 public class ReedSolomonShardGenerator {
 	private File file;
 	private ComputationConfig config;
-	//these values are in case f=1 TODO we need to make it automatic
 	private int DATA_SHARDS = config.t;		//t	
     private int PARITY_SHARDS = config.n-config.t;	//n-t
     private int TOTAL_SHARDS = config.n;	//n
 
     private int BYTES_IN_INT = 4;
 
+    //Generates locally TOTAL_SHARDS number of shares of the File f.
 	public ReedSolomonShardGenerator(File f) throws IOException{
 		this.file = f;
 		this.config = new ComputationConfig();
@@ -64,7 +64,7 @@ public class ReedSolomonShardGenerator {
         for (int i = 0; i < TOTAL_SHARDS; i++) {
             File outputFile = new File(
                     this.file.getParentFile(),
-                    this.file.getName() + "." + i);
+                    this.file.getName() + ".share" + i);
             OutputStream out = new FileOutputStream(outputFile);
             out.write(shards[i]);
             out.close();

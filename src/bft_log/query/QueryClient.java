@@ -22,7 +22,8 @@ import java.util.Set;
 
 import bft_log.update.UploadClient;
 
-
+//This is an example of a Client. Here the client just sequentially makes an Upload and Query request, on the same item.
+//TODO Make it interactive. 
 public class QueryClient {
 	
 	public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, ClassNotFoundException{
@@ -48,10 +49,11 @@ public class QueryClient {
 		PrivateKey sk = pair.getPrivate();
 		
 		//File to upload
-		File f = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test1");
+		File f = new File("/home/riccardo/git/bft_log/src/bft_log/Test1");
+		
 		//Instance of the Update protocol
-		//UploadClient up = new UploadClient(pk, sk);
-		//up.uploadClientFile(f);
+		UploadClient up = new UploadClient(pk, sk);
+		up.uploadClientFile(f);
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {

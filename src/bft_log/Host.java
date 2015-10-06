@@ -2,6 +2,7 @@ package bft_log;
 
 import java.net.InetSocketAddress;
 
+//Represent a Host (used for servers in our application).
 public class Host {
 	private InetSocketAddress ip;
 	private int port;

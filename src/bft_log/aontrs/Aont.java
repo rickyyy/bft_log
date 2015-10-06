@@ -30,21 +30,24 @@ public class Aont {
 	private int keySize = wordSize*8;
 	public byte[] aontPackage;
 	
-	public Aont(File f) throws FileNotFoundException{
+	public Aont() {
 		ut = new Utils();
-		try {
-			this.aontPackage = AontEncoding(f);
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
-			e.printStackTrace();
-		}
 	}
 	
+	//Constructor, when you receive an "already prepared" Aont Package and you just need to "decode" it.
+	public Aont(File f) throws FileNotFoundException{
+		ut = new Utils();
+		this.aontPackage = ut.getBytesFromFile(f);
+	}
+	
+	//Store on disk (generates a file) of the AONT package
 	public void getAontEncodedPackageAsFile(String filePath){
 		getFileFromBytes(this.aontPackage, filePath);
 	}
 	
+	//Encode a file into an AONT package
 	public byte[] AontEncoding(File f) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+		//Transform the file into a byte array and append the canary word.
 		try {
 			this.aontPackage = getBytesFromFile(f);
 			this.aontPackage = appendCanaryToData();
@@ -52,16 +55,21 @@ public class Aont {
 			e.printStackTrace();
 		}
 		
+		//Generate an AES key.
 		SecretKey encryptionKey = generateSecretKey();
 		Cipher ci = Cipher.getInstance(cryptoAlgorithm);
 		ci.init(Cipher.ENCRYPT_MODE, encryptionKey);
 		
-		byte[] dataEncrypted = new byte[this.aontPackage.length];
+		//Verify if the padding was added correctly.
 		if (this.aontPackage.length % this.wordSize != 0){
 			Exception exception = new Exception("Something went wrong with padding. Not divisible for size of words");
 		}
+		
+		//Compute the number of words with specific size (e.g., 16byte = wordSize) are needed
 		int words = this.aontPackage.length/this.wordSize;
 		
+		//Encrypt the file+padding with AES
+		byte[] dataEncrypted = new byte[this.aontPackage.length];
 		for (int i=0; i<words; i++){
 			byte[] codeWordPartial = new byte[wordSize];
 			System.arraycopy(aontPackage, i*wordSize, codeWordPartial, 0, wordSize);
@@ -73,16 +81,15 @@ public class Aont {
 			System.arraycopy(xoredCodeWord, 0, dataEncrypted, i*wordSize, wordSize);
 		}
 		
+		//Generate an hash value of the encrypted data. XOR the hash with the key previously generated.
+		//Append everything to the encrypted data.
 		byte[] hashEncData = ut.hashBytes(dataEncrypted);
 		byte[] encodedKey = encryptionKey.getEncoded();
 		byte[] xoredHashKey = new byte [hashEncData.length];
-		
-		System.out.println("ENCODED KEY: " + Arrays.toString(encodedKey) + "\n");
-		
+		//System.out.println("ENCODED KEY: " + Arrays.toString(encodedKey) + "\n");		
 		for (int i=0; i<encodedKey.length; i++){
 			xoredHashKey[i] = (byte) (hashEncData[i] ^ encodedKey[i]);
 		}
-		
 		byte[] aontPackage = new byte[dataEncrypted.length+xoredHashKey.length];
 		System.arraycopy(dataEncrypted, 0, aontPackage, 0, dataEncrypted.length);
 		System.arraycopy(xoredHashKey, 0, aontPackage, dataEncrypted.length, xoredHashKey.length);
@@ -90,25 +97,29 @@ public class Aont {
 		return aontPackage;
 	}
 	
+	//Decode a specific AONT Package and write the decoded file in the specified Path.
 	public byte[] AontDecoding(byte[] aontPackage, String pathFile) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
-		int dataEncLength = aontPackage.length-(wordSize*2);
+		//Compute the length of encrypted data. (= Subtract the size of the hash (i.e., SHA-256) from the AONT package)
+		int dataEncLength = aontPackage.length-(wordSize*2);	
 		byte[] dataEncrypted = new byte[dataEncLength];
 		byte[] xoredHashKey = new byte[wordSize*2];
 		System.arraycopy(aontPackage, 0, dataEncrypted, 0, dataEncLength);
 		System.arraycopy(aontPackage, dataEncLength, xoredHashKey, 0, wordSize*2);
 		
+		//Derive the key
 		byte[] encodedKey = new byte[wordSize];
 		byte[] hashEncData = ut.hashBytes(dataEncrypted);
 		for (int i=0; i<encodedKey.length; i++){
 			encodedKey[i] = (byte) (hashEncData[i] ^ xoredHashKey[i]);
 		}
-
-		System.out.println("DECODED KEY: " + Arrays.toString(encodedKey) + "\n");
+		//System.out.println("DECODED KEY: " + Arrays.toString(encodedKey) + "\n");
 		
+		//Instantiate the key
 		SecretKey key = new SecretKeySpec(encodedKey, 0, encodedKey.length, cryptoAlgorithm);
 		Cipher ci = Cipher.getInstance(cryptoAlgorithm);
 		ci.init(Cipher.ENCRYPT_MODE, key);
 		
+		//Decrypt the data
 		byte[] originalData = new byte[dataEncrypted.length];
 		int words = dataEncrypted.length/this.wordSize;
 		for (int i=0; i<words; i++){
@@ -122,21 +133,27 @@ public class Aont {
 			System.arraycopy(xoredCodeWord, 0, originalData, i*wordSize, wordSize);
 		}
 		
+		//Extract the canary word appendend in the encoding phase.
 		byte[] extractedCanary = new byte[wordSize];
 		System.arraycopy(originalData, originalData.length-wordSize, extractedCanary, 0, wordSize);
 		
+		//Store in a new array the original data (removing also the padding, if any).
 		byte[] originalFile = new byte[originalData.length-wordSize];
 		System.arraycopy(originalData, 0, originalFile, 0, originalData.length-wordSize);
 		originalFile = removePaddingToData(originalFile);
 		
+		//Print the original file (mainly for debug)
 		String file = new String(originalFile);
 		System.out.println(file + "\n");
 		
+		//Check the integrity verifying if the extracted canary word matches with the original one.
 		if (Arrays.equals(extractedCanary, this.canary.getBytes())){
 			System.out.println("CANARY WORDS ARE THE SAME, INTEGRITY PRESERVED\n");
 		} else {
 			System.out.println("CANARY WORDS DO NOT MATCH!!!! ERROR!!!\n");
 		}
+		
+		//Write the decoded file on disk.
 		getFileFromBytes(originalFile, pathFile);
 		return originalFile;
 	}
@@ -149,6 +166,7 @@ public class Aont {
 		return keyGen.generateKey();
 	}
 	
+	//Remove the padding that has been previously added.
 	private byte[] removePaddingToData(byte[] end){
 		if (this.sizePadding == 0){
 			return end;
@@ -196,15 +214,11 @@ public class Aont {
 			System.out.println("Error while transforming the file into a bytes array.");
 		}
 		fileToBytes = bos.toByteArray();
-		//System.out.println("Before Padding: " + Arrays.toString(this.filetoBytes));
-		//String s = new String(this.filetoBytes);
 		fileToBytes = addPaddingToData(fileToBytes);
-		//System.out.println("After Padding: " + Arrays.toString(this.filetoBytes));
-		//String s1 = new String(this.filetoBytes);
-		//System.out.println(s1);
 		return fileToBytes;
 	}
 	
+	//Given an array of bytes, create on disk a file (specified by filePath)
 	private void getFileFromBytes(byte[] bytesOfFile, String filePath){
 		FileOutputStream fos;
 		try {

@@ -14,6 +14,7 @@ public class LogEntry implements java.io.Serializable {
 	private byte[] previousQueryDigest;
 	private QueryMessage query;
 	
+	//TODO it should be fix. This does not represents a real HashChain. (few changes need though)
 	public LogEntry(byte[] digest, QueryMessage query){
 		this.previousQueryDigest = digest;
 		this.query = query;

@@ -18,6 +18,8 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Arrays;
 
+
+//Class with generic utilities method
 public class Utils implements Serializable {
 	/**
 	 * 
@@ -87,7 +89,7 @@ public class Utils implements Serializable {
 		return fileToBytes;
 	}
 	
-	public void getFileFromBytes(byte[] bytesOfFile, String filePath){
+	public void writeFileFromBytes(byte[] bytesOfFile, String filePath){
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(filePath);
@@ -96,6 +98,5 @@ public class Utils implements Serializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
+	}	
 }

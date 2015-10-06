@@ -2,6 +2,8 @@ package bft_log.update;
 
 import java.io.Serializable;
 
+//Message sent in response back to the User once the Upload messages
+//has been received correctly by the server.
 public class AcknowledgeUploadMessage implements Serializable {
 	/**
 	 * 

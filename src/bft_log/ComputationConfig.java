@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import bftsmart.reconfiguration.util.HostsConfig;
 
 public class ComputationConfig {
-	public static String appPath = "/Users/BortolameottiR/workspace/bft_log/";
+	public static String appPath = "/home/riccardo/git/bft_log/";
 	public ArrayList<Host> listServer;	//the list of servers in the system
-	static public int f = 1; //max number of tolerated compromised nodes
+	static public int f = 1; //max number of tolerated compromised nodes (SECURITY PARAMETER)
 	static public int t = f+1;	//threshold
 	static public int n = 3*f+1;	//total number of nodes
 	

@@ -9,6 +9,8 @@ import java.util.Iterator;
 
 
 //TODO So far it is implemented as it ask only one file at the time.
+//This is the message that is sent from Non-Execution Nodes to the Execution Node. It contains some basic information
+//the request made by the client, and the shares stored by the server.
 public class ExecutionMessage implements Serializable{
 	
 	/**

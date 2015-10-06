@@ -55,7 +55,7 @@ public class QueryMessage implements java.io.Serializable {
 		initializeRootQuery();
 	}
 	
-	/*Encode the attributes of a Query into a single string.*/
+	//Encode the attributes of a Query into a single string.
 	private String messageEncoding(Set<String> items, String op, Date timestamp, int r){
 		String s = "" + String.valueOf(items.hashCode()) + separator + op + separator + timestamp.toString() + separator + String.valueOf(r);
 		return s;
@@ -92,6 +92,7 @@ public class QueryMessage implements java.io.Serializable {
 		return;
 	}
 	
+	//Generates a shared initial knowledge. It is used to guarantee that the servers "bootstraps" their log in the same way.
 	public void initializeRootQuery() throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.ts = new Date(1442925151);	//common timestamp among servers to have the same starting point of view (Root query)
 		this.rand = 11111111;			//common random number to have same starting point
@@ -99,6 +100,7 @@ public class QueryMessage implements java.io.Serializable {
 		this.digest = ut.createDigest(message);
 	}
 	
+	//Initialization method of a Query request.
 	public void initializeQuery() throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.ts = new Date();
 		try {
