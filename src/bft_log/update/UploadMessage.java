@@ -111,4 +111,21 @@ public class UploadMessage implements Serializable{
 		return policyGroup;
 	}
 	
+	//The validation of Upload messages is implemented here. Digest, signature and policies
+	//Policies (access control mechanisms) are not implemented.
+	public boolean verifyUploadMessage(){
+		boolean verify = false;
+		byte[] signature = this.signedDigest;
+		PublicKey pk = this.pk;
+		String s = this.uploadMessageEncoding();
+		System.out.println(s);
+		try {
+			byte[] digest = ut.createDigest(s);
+			verify = ut.verifySignedDigest(pk, digest, signature);
+		} catch (NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+			e.printStackTrace();
+		}
+		return verify;
+	}
+	
 }

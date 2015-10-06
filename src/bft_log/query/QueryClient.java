@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Set;
 
+import bft_log.Utils;
 import bft_log.update.UploadClient;
 
 //This is an example of a Client. Here the client just sequentially makes an Upload and Query request, on the same item.
@@ -32,6 +33,8 @@ public class QueryClient {
 			System.out.println("Usage: java ComputationClient <process id>");
 			System.exit(-1);
 		}
+		
+		
 		//RSAKeyLoader keys = new RSAKeyLoader(0, "D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/config/");
 		ServiceProxy queryProxy = new ServiceProxy(Integer.parseInt(args[0]));
 		
@@ -70,6 +73,7 @@ public class QueryClient {
 	
 	// Method to sends a request that uses the Byzantine consensus protocol with invokeOrdered()
 	static public String generateRequest(QueryMessage q, ServiceProxy proxy) throws IOException{
+		Utils ut = new Utils();
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		try {
@@ -78,9 +82,11 @@ public class QueryClient {
 			out.writeObject(q);
 			byte[] reply = proxy.invokeOrdered(bos.toByteArray());
 			if (reply != null){
-				String previousValue = new String(reply);
-				System.out.println(previousValue);
-				return previousValue;
+				ApprovedExecution aex = (ApprovedExecution) ut.ByteToObject(reply);
+				//TODO to implement the Result Request. Once he got the approval, the client should connect to the Execution Node
+				//and ask for the result.
+				System.out.println(aex.toString());
+				return aex.toString();
 			}
 			return null;
 			

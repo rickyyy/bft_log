@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Hashtable;
@@ -38,13 +39,26 @@ public class UploadServer {
 	private Utils ut;
 	private Hashtable<Integer, ShareStorage> store;	//Storage in the future can also be implemented through a SQL DB. For simplicity we use a Hashmap in memory.
 	private String serverDiskPath;
+	private PublicKey pk;
+	private PrivateKey sk;
 	
-	//Constructor
+	//Constructor without crypto keys
 	public UploadServer(int id) throws IOException, ClassNotFoundException{
 		this.id = id;
 		this.conf = new ComputationConfig();
 		this.ut = new Utils();
 		this.store = new Hashtable<Integer, ShareStorage>();
+		//System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
+	}
+	
+	//Constructor that uses crypto.
+	public UploadServer(int id, PrivateKey skInput, PublicKey pkInput) throws IOException, ClassNotFoundException{
+		this.id = id;
+		this.conf = new ComputationConfig();
+		this.ut = new Utils();
+		this.store = new Hashtable<Integer, ShareStorage>();
+		this.pk = pkInput;
+		this.sk = skInput;
 		//System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
 	}
 	
@@ -83,7 +97,7 @@ public class UploadServer {
 				UploadMessage recMsg = (UploadMessage) obj;
 				
 				//UploadMessage validation: Digital Signature + Hash + Access Control mechanism (not implemented)
-				if (verifyUploadMessage(recMsg) && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
+				if (recMsg.verifyUploadMessage() && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
 					
 					//Write the share locally on disk.
 					storeShareOnDisk(recMsg);
@@ -100,9 +114,16 @@ public class UploadServer {
 			} else if (obj instanceof ExecutionMessage){
 				ExecutionMessage exec = (ExecutionMessage) obj;
 				
+				//TODO check if servers messages are validated or not.
+				
 				//Set the path where share is stored and write the share locally.
 				String pathShare = this.serverDiskPath + "/" + exec.getItemRequested().hashCode() + ".share" + String.valueOf(exec.getSendingNode());
 				ut.writeFileFromBytes(exec.getShardSent(), pathShare);
+				
+				//TODO This runs everytime a message arrives. It should be fixed. It should run once per request.
+				//TODO The result should be stored in a file/table. (the client will then ask for result of a request to ex node and
+				//the result will be sent to him.
+				
 				
 				//Take the shares for a specific ID and Reconstruct the original file.
 				reconstructAontPackage(exec.getItemRequested().hashCode());
@@ -117,24 +138,7 @@ public class UploadServer {
 		}
 	}
 	
-	//The validation of Upload messages is implemented here. Digest, signature and policies
-	//Policies (access control mechanisms) are not implemented.
-	private boolean verifyUploadMessage(UploadMessage msg){
-		System.out.println(this.ut.toString());
-		boolean verify = false;
-		byte[] signature = msg.getSignedDigest();
-		PublicKey pk = msg.getPk();
-		String s = msg.uploadMessageEncoding();
-		System.out.println(s);
-		try {
-			byte[] digest = ut.createDigest(s);
-			verify = ut.verifySignedDigest(pk, digest, signature);
-		} catch (NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
-			e.printStackTrace();
-		}
-		return verify;
-	}
-	
+	//Store in a "HashMap" that functions as a Database. Tuple (Identified, content of the Share, Access Policy)
 	private boolean storeShareInMemory(Integer id, byte[] share, String policy){
 		ShareStorage ss = new ShareStorage(share, policy);
 		if (store.get(id)==null){
@@ -167,9 +171,9 @@ public class UploadServer {
 			File fileToDecode = new File(pathReconstructed + ".decoded");
 			Aont encodedAont = new Aont(fileToDecode);
 			byte[] decodedAont = encodedAont.AontDecoding(encodedAont.aontPackage, pathReconstructed);
+			fileToDecode.delete();
 			rsr.ShardDeletion(this.id);
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -177,11 +181,13 @@ public class UploadServer {
 	//This method is called by QueryServer. A Node, after receiving and approving a certain QueryRequest,
 	//it sends to the Execution Node the shares it owns of the file requested in the query. 
 	public void sendShare(QueryMessage q){
-		ExecutionMessage exec = new ExecutionMessage(q);
-		Host exNode = this.conf.listServer.get(exec.getExecutionNode());	//Get the host details of the Execution Node
+		ExecutionMessage exec = null;
+		
 		
 		//For each data item requested in the query.
 		for (String s : q.requestedItems){
+			exec = new ExecutionMessage(q);
+			Host exNode = this.conf.listServer.get(exec.getExecutionNode());	//Get the host details of the Execution Node
 			Path path = Paths.get(this.serverDiskPath + "/" + s.hashCode() + ".share" + String.valueOf(this.id));
 			try {
 				//Load the content of the shard stored locally and generate an Execution message.

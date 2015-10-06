@@ -1,0 +1,6 @@
+1) The Execution Node stores the shares on disk. This is not a secure practice. Although it deletes them, the attacker can "fetch" the items. It would be better to implement this method in dynamic memory: allocating and de-allocating memory once the operation are finished.
+
+2) Servers are still implemented as a Single Thread. This works as a prototype. It would be better to have multithread to handle more requests per second. (make it more efficient).
+	- It is a delicate because also shared variables have to be treated correctly.
+
+

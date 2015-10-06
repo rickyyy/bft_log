@@ -51,7 +51,6 @@ public class UploadClient {
 			//Generates shards of the AONT package
 			File packageToShard = new File (aontPath);
 			ReedSolomonShardGenerator shardGen = new ReedSolomonShardGenerator(packageToShard);
-			shardGen.ShardGenerator();
 			int idFile = f.getName().hashCode();
 				
 			//Call the upload Protocol.

@@ -11,10 +11,15 @@ import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SignatureException;
+
+import com.sun.org.apache.xml.internal.security.c14n.implementations.UtfHelpper;
 
 import bft_log.ComputationConfig;
 import bft_log.Log;
+import bft_log.Utils;
 import bft_log.update.UploadServer;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.server.defaultservices.DefaultRecoverable;
@@ -25,13 +30,27 @@ public class QueryServer extends DefaultRecoverable {
 	private int myId;
 	public static int counter = 0;	//It is used as entry index for the log. Constantly increasing.
 	private Log bftLog;
+	private Utils ut;
 	private ServiceReplica replica;	//Byzantine fault tolerant consensus server.
 	private UploadServer upServer;	//Server that handles the logic of the applicaiton.
 	private boolean iAmExecutionNode;
 	private ComputationConfig config;
+	private PrivateKey sk;
+	private PublicKey pk;
 	
+	//Constructor without crypto keys
 	public QueryServer (int id) throws IOException, ClassNotFoundException {
+		this.ut = new Utils();
 		this.myId = id;
+		this.bftLog = new Log();
+		this.replica = new ServiceReplica(id, this, this);
+	}
+	
+	//Constructor with crypto keys
+	public QueryServer (int id, PrivateKey sk1, PublicKey pk1) throws IOException, ClassNotFoundException {
+		this.myId = id;
+		this.sk = sk1;
+		this.pk = pk1;
 		this.bftLog = new Log();
 		this.replica = new ServiceReplica(id, this, this);
 	}
@@ -151,6 +170,7 @@ public class QueryServer extends DefaultRecoverable {
 			try {
 				//Verify the correctness of the signature and the digest.
 				if (q.ut.verifySignedDigest(q.pk, q.digest, q.signedDigest) && q.verifyHash(q.requestedItems, q.operation, q.ts, q.rand)){
+					//Counter determines the index in the log. It constantly increases.
 					counter += 1;
 					
 					//Compute (deterministically) who is the Execution Node, and add this value to the request.
@@ -168,9 +188,11 @@ public class QueryServer extends DefaultRecoverable {
 						upServer.sendShare(q);
 					}
 					
-					if (q != null){
+					ApprovedExecution aex = new ApprovedExecution(q);
+					
+					if (aex != null){
 						//Sends back this message to the client.
-						resultBytes = q.toString().getBytes();
+						resultBytes = ut.ObjectToByte(aex);
 					}
 					return resultBytes;
 				}

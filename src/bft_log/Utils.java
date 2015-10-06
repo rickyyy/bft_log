@@ -1,11 +1,16 @@
 package bft_log;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -98,5 +103,59 @@ public class Utils implements Serializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}	
+	}
+	
+	public byte[] ObjectToByte(Object o){
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		byte[] yourBytes = null;
+		ObjectOutput out = null;
+		try {
+		  out = new ObjectOutputStream(bos);   
+		  out.writeObject(o);
+		  yourBytes = bos.toByteArray();
+		  return yourBytes;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+		  try {
+		    if (out != null) {
+		      out.close();
+		    }
+		  } catch (IOException ex) {
+		  }
+		  try {
+		    bos.close();
+		  } catch (IOException ex) {
+		  }
+		}
+		return yourBytes;
+	}
+	
+	public Object ByteToObject (byte[] myArray){
+		ByteArrayInputStream bis = new ByteArrayInputStream(myArray);
+		ObjectInput in = null;
+		Object obj = null;
+		try {
+		  in = new ObjectInputStream(bis);
+		  obj = in.readObject();
+		  return obj;
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+		  try {
+		    bis.close();
+		  } catch (IOException ex) {
+		    // ignore close exception
+		  }
+		  try {
+		    if (in != null) {
+		      in.close();
+		    }
+		  } catch (IOException ex) {
+		    // ignore close exception
+		  }
+		}
+		return obj;
+	}
 }
