@@ -34,13 +34,13 @@ public class QueryClient {
 			System.exit(-1);
 		}
 		
-		
 		//RSAKeyLoader keys = new RSAKeyLoader(0, "D:/Profiles/BortolameottiR/Desktop/My Distributed System/Implementation/library-BFT-SMaRt-v1.0-beta/library-BFT-SMaRt-v1.0-beta/config/");
 		ServiceProxy queryProxy = new ServiceProxy(Integer.parseInt(args[0]));
 		
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
 		items.add("Test1");
+		items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
 		String operation = "count";
 		
 		//Generate a key pair for the client
@@ -52,11 +52,13 @@ public class QueryClient {
 		PrivateKey sk = pair.getPrivate();
 		
 		//File to upload
-		File f = new File("/home/riccardo/git/bft_log/src/bft_log/Test1");
+		File f1 = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test1");
+		File f2 = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Riccardo_Bortolameotti_NSS_2015.pdf");
 		
 		//Instance of the Update protocol
 		UploadClient up = new UploadClient(pk, sk);
-		up.uploadClientFile(f);
+		up.uploadClientFile(f1);
+		up.uploadClientFile(f2);
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {

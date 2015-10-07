@@ -16,6 +16,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.crypto.BadPaddingException;
@@ -29,7 +30,9 @@ import bft_log.Utils;
 import bft_log.aontrs.Aont;
 import bft_log.aontrs.ReedSolomonShardReconstructor;
 import bft_log.query.ExecutionMessage;
+import bft_log.query.ExecutionTable;
 import bft_log.query.QueryMessage;
+import bft_log.query.ReceivedShare;
 
 public class UploadServer {
 	private int id;
@@ -38,6 +41,7 @@ public class UploadServer {
 	private ComputationConfig conf;
 	private Utils ut;
 	private Hashtable<Integer, ShareStorage> store;	//Storage in the future can also be implemented through a SQL DB. For simplicity we use a Hashmap in memory.
+	private ExecutionTable execTbl;
 	private String serverDiskPath;
 	private PublicKey pk;
 	private PrivateKey sk;
@@ -48,6 +52,7 @@ public class UploadServer {
 		this.conf = new ComputationConfig();
 		this.ut = new Utils();
 		this.store = new Hashtable<Integer, ShareStorage>();
+		this.execTbl = new ExecutionTable(this.conf);
 		//System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
 	}
 	
@@ -113,8 +118,10 @@ public class UploadServer {
 				//runs these operations.
 			} else if (obj instanceof ExecutionMessage){
 				ExecutionMessage exec = (ExecutionMessage) obj;
-				
 				//TODO check if servers messages are validated or not.
+				
+				execTbl.updateTable(exec);
+				System.out.println(execTbl);
 				
 				//Set the path where share is stored and write the share locally.
 				String pathShare = this.serverDiskPath + "/" + exec.getItemRequested().hashCode() + ".share" + String.valueOf(exec.getSendingNode());
@@ -124,9 +131,13 @@ public class UploadServer {
 				//TODO The result should be stored in a file/table. (the client will then ask for result of a request to ex node and
 				//the result will be sent to him.
 				
-				
-				//Take the shares for a specific ID and Reconstruct the original file.
-				reconstructAontPackage(exec.getItemRequested().hashCode());
+				if(execTbl.readyToReconstruction(exec.getQueryID())){
+					ArrayList<ReceivedShare> list = execTbl.get(exec.getQueryID());
+					for (ReceivedShare s : list){
+						reconstructAontPackage(s.getIdShare().hashCode());
+					}
+					//Take the shares for a specific ID and Reconstruct the original file.
+				}
 				
 				//TODO Sends back the result to the client.
 				outToClient.writeObject(exec);
@@ -170,7 +181,7 @@ public class UploadServer {
 			reconstruct.delete();
 			File fileToDecode = new File(pathReconstructed + ".decoded");
 			Aont encodedAont = new Aont(fileToDecode);
-			byte[] decodedAont = encodedAont.AontDecoding(encodedAont.aontPackage, pathReconstructed);
+			encodedAont.AontDecoding(encodedAont.aontPackage, pathReconstructed);
 			fileToDecode.delete();
 			rsr.ShardDeletion(this.id);
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
@@ -178,11 +189,14 @@ public class UploadServer {
 		}
 	}
 	
+	public void executionQuerySetup(QueryMessage q){
+		execTbl.insertExpectedNumItemsQuery(q.id, q.requestedItems.size());
+	}	
+	
 	//This method is called by QueryServer. A Node, after receiving and approving a certain QueryRequest,
 	//it sends to the Execution Node the shares it owns of the file requested in the query. 
 	public void sendShare(QueryMessage q){
 		ExecutionMessage exec = null;
-		
 		
 		//For each data item requested in the query.
 		for (String s : q.requestedItems){

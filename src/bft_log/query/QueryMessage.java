@@ -105,6 +105,7 @@ public class QueryMessage implements java.io.Serializable {
 		this.ts = new Date();
 		try {
 				this.rand = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt(MAX_SIZE);	//Generates a random value between 0 and 2^16
+				this.id = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt(MAX_SIZE);
 			} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
 				e.printStackTrace();
 			}

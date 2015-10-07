@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import bftsmart.reconfiguration.util.HostsConfig;
 
 public class ComputationConfig {
-	public static String appPath = "/home/riccardo/git/bft_log/";
+	public static String appPath = "/Users/BortolameottiR/workspace/bft_log/";
 	public ArrayList<Host> listServer;	//the list of servers in the system
 	static public int f = 1; //max number of tolerated compromised nodes (SECURITY PARAMETER)
 	static public int t = f+1;	//threshold
@@ -21,8 +21,6 @@ public class ComputationConfig {
 		HostsConfig hc = new HostsConfig(appPath+"config", "hosts_upload_port.txt");
 		listServer = new ArrayList<Host>();
 		int[] hosts = hc.getHostsIds();
-		//int toExclude = hosts.length % n;
-		System.out.println(String.valueOf(hosts.length));
 		for(int i=hosts.length-1; i>=0; i--){
 			//7001 is the "special" value in the default configuration of bftsmart and does not represent the "real" replicas
 			if(hosts[i]!=7001){	
@@ -31,7 +29,6 @@ public class ComputationConfig {
 				listServer.add(id, h);
 			}
 		}
-		System.out.println(listServer.toString());
 		return listServer;
 	}
 }

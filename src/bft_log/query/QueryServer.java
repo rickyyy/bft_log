@@ -186,6 +186,9 @@ public class QueryServer extends DefaultRecoverable {
 					//If this node is NOT the Execution Node, sends the shares to the Execution Node.
 					if (executionNode != this.myId){
 						upServer.sendShare(q);
+					} else {
+						System.out.println("I am node " + String.valueOf(this.myId) + " and I am the execution node");
+						upServer.executionQuerySetup(q);
 					}
 					
 					ApprovedExecution aex = new ApprovedExecution(q);

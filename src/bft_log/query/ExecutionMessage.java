@@ -17,6 +17,7 @@ public class ExecutionMessage implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 8280882380151584571L;
+	private int queryID;
 	private byte[] clientRequestSignature;
 	private String itemRequested;
 	private int executionNode;
@@ -24,9 +25,16 @@ public class ExecutionMessage implements Serializable{
 	private byte[] shardSent;
 	
 	public ExecutionMessage(QueryMessage q){
+		this.queryID = q.id;
 		this.clientRequestSignature = q.signedDigest;
 		this.executionNode = q.executionNode;
 	}
+
+	
+	public int getQueryID() {
+		return queryID;
+	}
+
 
 	public int getSendingNode() {
 		return sendingNode;
