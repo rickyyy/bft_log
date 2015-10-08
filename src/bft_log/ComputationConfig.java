@@ -1,5 +1,8 @@
 package bft_log;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 
 import bftsmart.reconfiguration.util.HostsConfig;
@@ -13,6 +16,29 @@ public class ComputationConfig {
 	
 	public ComputationConfig(){
 		this.listServer = listServer();
+	}
+	
+	public ArrayList<Host> aliveServerList(){
+		HostsConfig hc = new HostsConfig(appPath+"config", "hosts_upload_port.txt");
+		listServer = new ArrayList<Host>();
+		int[] hosts = hc.getHostsIds();
+		Socket testSock;
+		for(int i=hosts.length-1; i>=0; i--){
+			//7001 is the "special" value in the default configuration of bftsmart and does not represent the "real" replicas
+			if(hosts[i]!=7001){	
+				int id = hosts[i];
+				Host h = new Host(hc.getRemoteAddress(id), hc.getPort(id), id);
+				String ip = h.getIp().getHostString();
+				try {
+					testSock = new Socket(ip, h.getPort());
+					listServer.add(id, h);
+					testSock.close();
+				} catch(IOException e){
+					//System.err.println("Server " + h.getId() + " is not listening on port " + h.getPort());
+				}
+			}
+		}
+		return listServer;
 	}
 	
 	// Allows the client to retrieve the information of the existing servers and sends them data independently.

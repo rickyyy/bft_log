@@ -1,10 +1,10 @@
 package bft_log.update;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -12,10 +12,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -29,10 +27,11 @@ import bft_log.ShareStorage;
 import bft_log.Utils;
 import bft_log.aontrs.Aont;
 import bft_log.aontrs.ReedSolomonShardReconstructor;
-import bft_log.query.ExecutionMessage;
-import bft_log.query.ExecutionTable;
 import bft_log.query.QueryMessage;
-import bft_log.query.ReceivedShare;
+import bft_log.query.execution.ExecutionMessage;
+import bft_log.query.execution.ExecutionTable;
+import bft_log.query.result.ReceivedShare;
+import bft_log.query.result.Result;
 
 public class UploadServer {
 	private int id;
@@ -42,6 +41,7 @@ public class UploadServer {
 	private Utils ut;
 	private Hashtable<Integer, ShareStorage> store;	//Storage in the future can also be implemented through a SQL DB. For simplicity we use a Hashmap in memory.
 	private ExecutionTable execTbl;
+	private Hashtable<Integer, String> resTbl;
 	private String serverDiskPath;
 	private PublicKey pk;
 	private PrivateKey sk;
@@ -53,6 +53,7 @@ public class UploadServer {
 		this.ut = new Utils();
 		this.store = new Hashtable<Integer, ShareStorage>();
 		this.execTbl = new ExecutionTable(this.conf);
+		this.resTbl = new Hashtable<Integer, String>();
 		//System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
 	}
 	
@@ -75,6 +76,7 @@ public class UploadServer {
 		serverEnvironment();
 	}
 	
+	//Initialize the folder where the server will store its data items.
 	private void serverEnvironment(){
 		this.serverDiskPath = conf.appPath + "test/server" + String.valueOf(this.id);
 		File folder = new File(serverDiskPath);
@@ -86,10 +88,11 @@ public class UploadServer {
 		}
 	}
 	
-	// Server Running waiting for messages from Clients or Servers.
+	//Server Running waiting for messages from Clients or Servers.
 	public void startUploadServer() throws IOException, ClassNotFoundException{
 		initializeUploadServer();
 		while(true){
+			//Accept incoming connection
 			Socket clientSocket = uploadChannel.accept();
 			ObjectOutputStream outToClient = new ObjectOutputStream(clientSocket.getOutputStream());
 			ObjectInputStream inFromClient = new ObjectInputStream(clientSocket.getInputStream());
@@ -97,14 +100,15 @@ public class UploadServer {
 			//Receive the incoming message from the connected client.
 			Object obj = inFromClient.readObject();
 			
-			//Procedure to handle Upload messages
+			//Procedure to handle Upload messages (used during the Upload Protocol)
 			if (obj instanceof UploadMessage){	
 				UploadMessage recMsg = (UploadMessage) obj;
 				
 				//UploadMessage validation: Digital Signature + Hash + Access Control mechanism (not implemented)
+				//UploadMessage checks whether the share has been already received. (this is done in memory, and does not count the file stored locally).
 				if (recMsg.verifyUploadMessage() && storeShareInMemory(recMsg.getId(), recMsg.getShare(), recMsg.getPolicyGroup())){
 					
-					//Write the share locally on disk.
+					//Write the share locally on disk. (it differs from the storage in memory. TODO good idea to unify them.
 					storeShareOnDisk(recMsg);
 					
 					//Prepare ACK message for the client and send it.
@@ -114,10 +118,10 @@ public class UploadServer {
 					System.out.println("Upload Message Signature OR Digest Not Valid! Message Discarded\n");
 				}
 				
-				//Procedure to handle Execution messages. Only one node per request (= Execution Node)
-				//runs these operations.
+			//Procedure to handle Execution messages. Only one node per request (= Execution Node) runs these operations.
 			} else if (obj instanceof ExecutionMessage){
 				ExecutionMessage exec = (ExecutionMessage) obj;
+				
 				//TODO check if servers messages are validated or not.
 				
 				execTbl.updateTable(exec);
@@ -136,17 +140,66 @@ public class UploadServer {
 					for (ReceivedShare s : list){
 						reconstructAontPackage(s.getIdShare().hashCode());
 					}
-					//Take the shares for a specific ID and Reconstruct the original file.
 				}
 				
-				//TODO Sends back the result to the client.
+				//The result is stored locally at Execution Node. It will wait until the client will ask for the result.
+				runOperation(exec.getQueryID(), "concat");
 				outToClient.writeObject(exec);
-			} else {
-				System.out.println("Object Not Recognized.");
+				
+
+			//Sends back the result to the client. TODO purge results from memory after client requested them.
+			} else if (obj instanceof Result){
+				Result res = (Result) obj;
+				String resultOperation = resTbl.get(res.getIdQuery());
+				res.setResult(resultOperation);
+				System.out.println(res.getResult());
+				outToClient.writeObject(res);
+			}
+			
+			//Unrecognized message
+			else {
+				System.out.println("Message Not Recognized.");
 			}
 			outToClient.close();
 			clientSocket.close();
 		}
+	}
+	
+	//The Execution server runs the requested operation by the query. The operation is implemented
+	//in a rough way. We just concatenate the two files. 
+	private void runOperation(int idQuery, String operation){
+		int numberFiles = execTbl.getExpectedNumItemsQuery(idQuery);
+		ArrayList<ReceivedShare> list = execTbl.get(idQuery);
+		ArrayList<String> nameFiles = new ArrayList<>();
+		for (ReceivedShare s : list){
+			String file = s.getIdShare();
+			nameFiles.add(file);
+		}
+		if ((nameFiles.size() == numberFiles) && operation=="concat"){
+			String path = this.serverDiskPath + "/";
+			String result = "";
+			for (String s : nameFiles){
+				String pathFile = path + s.hashCode();
+				File f = new File(pathFile);
+				System.out.println("The path I am looking for " + pathFile);
+				if (f.exists() && !f.isDirectory()){
+					System.out.println("FILE EXISTS!!!");
+					try {
+						byte[] byteFile = ut.getBytesFromFile(f);
+						result += new String(byteFile) + "/";
+					} catch (FileNotFoundException e) {
+						System.err.println("FileNotFoundException: " + e.getMessage());
+					}
+				}
+			}
+			this.resTbl.put(idQuery, result);
+			System.out.println("This is the result: " + result);
+			System.out.println("STORED SUCCESSFULLY IN RES TABLE");
+			return;
+		}
+		
+		System.out.println("Result not stored in table");
+		return;
 	}
 	
 	//Store in a "HashMap" that functions as a Database. Tuple (Identified, content of the Share, Access Policy)
@@ -185,7 +238,7 @@ public class UploadServer {
 			fileToDecode.delete();
 			rsr.ShardDeletion(this.id);
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			e.printStackTrace();
+			System.err.println("Error during the reconstruction of AONT package : " + String.valueOf(idFileRequested) + " " + e.getMessage());
 		}
 	}
 	
@@ -223,7 +276,7 @@ public class UploadServer {
 				//Close the connection.
 				sock.close();
 			} catch (IOException | ClassNotFoundException e) {
-				e.printStackTrace();
+				System.err.println("Error while sending share : " + e.getMessage());
 			}
 		}
 	}

@@ -57,7 +57,7 @@ public class UploadClient {
 			uploadClientProtocol(idFile, packageToShard);
 			
 		} catch (IOException | ClassNotFoundException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			e.printStackTrace();
+			System.err.println("Error while Uploading a File: " + e.getMessage());
 		}
 	}
 	
@@ -71,14 +71,14 @@ public class UploadClient {
 		
 		for (int i=0; i<config.listServer.size();i++){
 			Host s = config.listServer.get(i);
-			String ipSocket = s.getIp().toString();
 			try{
 				//Prepare the Shard i.
 				File shardFile = new File (share.getParentFile(), share.getName() + ".share" + i);
 				byte[] shareValue = ut.getBytesFromFile(shardFile);
 				
 				//Connects to Node i.
-				Socket sock = new Socket(s.getIp().getHostString(), s.getPort());
+				String ip = s.getIp().getHostString();
+				Socket sock = new Socket(ip, s.getPort());
 				out = new ObjectOutputStream(sock.getOutputStream());
 				in = new ObjectInputStream(sock.getInputStream());
 				
@@ -96,7 +96,6 @@ public class UploadClient {
 				AcknowledgeUploadMessage msgFromServer = null;
 				msgFromServer = (AcknowledgeUploadMessage) in.readObject();
 				
-				
 				//TODO Implement a verification that tries to match if the Acknowledgment is good for the UploadMessage sent earlier.
 
 				//Updates the counter of ACK messages received.
@@ -113,9 +112,9 @@ public class UploadClient {
 				}
 				sock.close();
 			} catch (ConnectException e) {
-			    System.out.println("Connection Failed : " + ipSocket.toString() + "\n");
+				System.err.println("Connection Failed: " + e.getMessage());
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println("IOException: " + e.getMessage());
 			} finally {
 				out.close();
 				in.close();

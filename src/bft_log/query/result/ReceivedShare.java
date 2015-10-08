@@ -1,4 +1,4 @@
-package bft_log.query;
+package bft_log.query.result;
 
 public class ReceivedShare {
 	private String idShare;

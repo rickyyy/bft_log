@@ -27,7 +27,6 @@ public class UploadMessage implements Serializable{
 	private byte[] signedDigest;
 	private PublicKey pk;
 	
-	private boolean acknowledge;
 	private Utils ut;
 	private String separator = " ";
 
@@ -53,18 +52,10 @@ public class UploadMessage implements Serializable{
 		try {
 			this.signedDigest = ut.createDigest(msg);
 		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			System.err.println("NoSuchAlgorithmException: " + e.getMessage());
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			System.err.println("UnsupportedEncodingException: " + e.getMessage());
 		}
-	}
-
-	public boolean isAcknowledge() {
-		return acknowledge;
-	}
-
-	public void setAcknowledge() {
-		this.acknowledge = true;
 	}
 
 	public byte[] getSignedDigest() {
@@ -87,7 +78,6 @@ public class UploadMessage implements Serializable{
 		return pk;
 	}
 
-
 	/*Encode the attributes of a Query into a single string.*/
 	public String uploadMessageEncoding(){
 		String s = "" + String.valueOf(this.id) + separator + Arrays.toString(this.share) + separator + this.policyGroup + separator + this.ts.toString() ;
@@ -101,7 +91,6 @@ public class UploadMessage implements Serializable{
 	public int getNodeId() {
 		return nodeId;
 	}
-
 
 	public byte[] getShare() {
 		return share;
@@ -123,7 +112,7 @@ public class UploadMessage implements Serializable{
 			byte[] digest = ut.createDigest(s);
 			verify = ut.verifySignedDigest(pk, digest, signature);
 		} catch (NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
-			e.printStackTrace();
+			System.err.println("Error while verifying the Upload Message" + e.getMessage());
 		}
 		return verify;
 	}

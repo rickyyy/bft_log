@@ -20,7 +20,12 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.sun.istack.internal.FinalArrayList;
+
+import bft_log.ComputationConfig;
 import bft_log.Utils;
+import bft_log.query.execution.ApprovedExecution;
+import bft_log.query.result.ResultFetching;
 import bft_log.update.UploadClient;
 
 //This is an example of a Client. Here the client just sequentially makes an Upload and Query request, on the same item.
@@ -40,7 +45,7 @@ public class QueryClient {
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
 		items.add("Test1");
-		items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
+		//items.add("Test2");
 		String operation = "count";
 		
 		//Generate a key pair for the client
@@ -54,11 +59,13 @@ public class QueryClient {
 		//File to upload
 		File f1 = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test1");
 		File f2 = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Riccardo_Bortolameotti_NSS_2015.pdf");
+		File f3 = new File("/Users/BortolameottiR/workspace/bft_log/src/bft_log/Test2");
 		
 		//Instance of the Update protocol
 		UploadClient up = new UploadClient(pk, sk);
 		up.uploadClientFile(f1);
-		up.uploadClientFile(f2);
+		//up.uploadClientFile(f2);
+		//up.uploadClientFile(f3);
 		
 		//Instantiate the example query. Send a query request to all servers
 		try {
@@ -71,11 +78,14 @@ public class QueryClient {
 			e.printStackTrace();
 		}
 		generateRequest(request, queryProxy);
+		queryProxy.close();
 	}
 	
 	// Method to sends a request that uses the Byzantine consensus protocol with invokeOrdered()
 	static public String generateRequest(QueryMessage q, ServiceProxy proxy) throws IOException{
 		Utils ut = new Utils();
+		String finalResult = null;
+		ComputationConfig config = new ComputationConfig();
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		try {
@@ -84,13 +94,20 @@ public class QueryClient {
 			out.writeObject(q);
 			byte[] reply = proxy.invokeOrdered(bos.toByteArray());
 			if (reply != null){
-				ApprovedExecution aex = (ApprovedExecution) ut.ByteToObject(reply);
-				//TODO to implement the Result Request. Once he got the approval, the client should connect to the Execution Node
-				//and ask for the result.
-				System.out.println(aex.toString());
-				return aex.toString();
+				Object obj = ut.ByteToObject(reply);
+				if (obj instanceof ApprovedExecution){
+					ApprovedExecution aex = (ApprovedExecution) obj;
+					ResultFetching rf = new ResultFetching(aex);
+					rf.getExecNode(config.listServer);
+					System.out.println("Connecting to Execution Node " + aex.getExecutionNode() + " for Query " + aex.getIdApprovedQuery());
+					int attempt = 0;
+						System.out.print("Asking the server for the Result: " + String.valueOf(attempt));
+						finalResult = rf.sendResultRequest();
+						System.out.println(finalResult);
+					return finalResult;
+				}
+				return "CASE NOT ADDRESSED";
 			}
-			return null;
 			
 		} finally {
 			try {
@@ -106,5 +123,7 @@ public class QueryClient {
 			    // ignore close exception
 			}
 		}
+		
+		return finalResult;
 	}
 }

@@ -1,4 +1,4 @@
-package bft_log.query;
+package bft_log.query.execution;
 
 
 
@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
+
+import bft_log.query.QueryMessage;
 
 
 //TODO So far it is implemented as it ask only one file at the time.
