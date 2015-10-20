@@ -44,8 +44,8 @@ public class QueryClient {
 		
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
-		items.add("Test1");
-		//items.add("Test2");
+		items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
+		items.add("Test2");
 		String operation = "count";
 		
 		//Generate a key pair for the client
@@ -63,7 +63,7 @@ public class QueryClient {
 		
 		//Instance of the Update protocol
 		UploadClient up = new UploadClient(pk, sk);
-		up.uploadClientFile(f1);
+		//up.uploadClientFile(f1);
 		//up.uploadClientFile(f2);
 		//up.uploadClientFile(f3);
 		
