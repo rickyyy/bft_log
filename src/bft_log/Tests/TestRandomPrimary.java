@@ -36,7 +36,7 @@ public class TestRandomPrimary {
 		return receiverList;
 	}
 
-	public ArrayList<CmtRCommitPhaseOutput> waitCommitments(ArrayList<CmtRCommitPhaseOutput> listCommit) throws IllegalArgumentException, IOException{
+	public void waitCommitments() throws IllegalArgumentException, IOException{
 		
 		while(true){
 	    	 for (PartyData m : connections.keySet()){
@@ -56,9 +56,6 @@ public class TestRandomPrimary {
     					TestRandomShareCommitMsg msg = ((MyCmtReceiver)receiver).getCommMap();
     					valueTable.put(m.hashCode(), msg);
     					
-    					listCommit.add(output);
-		    	    	
-		    	    	System.out.println("(primary) Size of list Commit: " + listCommit.size());
 		    	    	break;
     				}catch (SecurityLevelException | InvalidDlogGroupException | ClassNotFoundException | IOException e) {
     					// TODO Auto-generated catch block
@@ -66,9 +63,25 @@ public class TestRandomPrimary {
     				}
     	    	}
 	    	 }
-	    	 System.out.println("HERE LOOP");
 	    	 System.out.println(valueTable.toString());
-	    	 return listCommit;
+	    	 break;
+		}
+		sendChosenCmt();
+	}
+	
+	private void sendChosenCmt(){
+		System.out.println("Sending Table to replicas ... ");
+		for (Map<String, Channel> i : connections.values()){
+			Iterator it = i.values().iterator();
+			while(it.hasNext()){
+				try {
+					((Channel)it.next()).send(this.valueTable);
+					System.out.println("Table Sent Successfully!");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }

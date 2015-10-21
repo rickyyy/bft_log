@@ -2,6 +2,7 @@ package bft_log.Tests;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.Hashtable;
 import java.util.Map;
 
 import edu.biu.scapi.comm.Channel;
@@ -22,7 +23,8 @@ public class TestRandomReplica {
 	private DlogGroup dlog = null;
 	private CmtCommitValue val = null;
 	private long idCmt;
-	
+	private Hashtable<Integer, TestRandomShareCommitMsg> valueTable = null;
+
 	public TestRandomReplica(Map<String, Channel> primaryChannel){
 		this.primaryCh = primaryChannel;
 		this.idCmt = 2;
@@ -51,6 +53,27 @@ public class TestRandomReplica {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-	 }
+		}
+		receiveCmtTable();
+	}
+	
+	private void receiveCmtTable(){
+		System.out.println("Waiting for the Committed Table chosen by the primary ...");
+		while (true){
+			for (Channel i : primaryCh.values()){
+				try {
+					this.valueTable = (Hashtable<Integer, TestRandomShareCommitMsg>)i.receive();
+				} catch (ClassNotFoundException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if (this.valueTable!=null){
+				System.out.println("Committed Table Received!");
+				System.out.println(valueTable.toString());
+				break;
+			}
+		}
+		
 	}
 }

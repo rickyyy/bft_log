@@ -27,14 +27,15 @@ public class MyCmtReceiver extends CmtPedersenReceiver implements CmtReceiver {
 			System.err.println("On this channel have been sent more than one commit with same id.");
 		} else {
 			for ( Long i : this.commitmentMap.keySet()){
-				msg = new TestRandomShareCommitMsg(i, (GroupElementSendableData) ((CmtCCommitmentMsg) this.commitmentMap.get(i)).getCommitment());
+				msg = new TestRandomShareCommitMsg(i, (GroupElementSendableData) ((CmtCCommitmentMsg) this.commitmentMap.get(i)).getCommitment(), this.getH());
 				return msg;
 			}
 		}
 		return null;
 	}
 	
-	public GroupElement getH(){
-		return this.h;
+	//We use this class because "GroupElement" is not serializable
+	public GroupElementSendableData getH(){
+		return this.h.generateSendableData();
 	}
 }

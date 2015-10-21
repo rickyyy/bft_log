@@ -90,18 +90,18 @@ public class TestRandomDemo {
 			
 			//Update the list with the received commitments
     	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections);
-    	    listCommit = testCmtSel.waitCommitments(listCommit);
+    	    testCmtSel.waitCommitments();
     	    
     	    
-    	    //Send the selection to other replicas
-    	    for (Map<String, Channel> i : connections.values()){
-	    		 Iterator it = i.values().iterator();
-    	    	 while(it.hasNext()){
-    	    		 Channel ch = (Channel) it.next();
-    	    		 ch.send(listCommit);
-    	    		 System.out.println("Message sent");
-    	    	 }
-	    	 }
+//    	    //Send the selection to other replicas
+//    	    for (Map<String, Channel> i : connections.values()){
+//	    		 Iterator it = i.values().iterator();
+//    	    	 while(it.hasNext()){
+//    	    		 Channel ch = (Channel) it.next();
+//    	    		 ch.send(listCommit);
+//    	    		 System.out.println("Message sent");
+//    	    	 }
+//	    	 }
 		} else {	//I am one of the other nodes. I have to commit. If I am selected, I then decommit.
 			
 			//Take the channel to the primary node
@@ -112,16 +112,16 @@ public class TestRandomDemo {
 			cmtToPrimary.sendToPrimary(myId);
 			
 			//Receive the selected commit from the primary node
-			for (Channel i : primaryCh.values()){
-				try {
-					System.out.println("Received Commit Set");
-					listCommit = (ArrayList<CmtRCommitPhaseOutput>) i.receive();
-					System.out.println("(replica) Size of list Commit: " + listCommit.size());
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+//			for (Channel i : primaryCh.values()){
+//				try {
+//					System.out.println("Received Commit Set");
+//					listCommit = (ArrayList<CmtRCommitPhaseOutput>) i.receive();
+//					System.out.println("(replica) Size of list Commit: " + listCommit.size());
+//				} catch (ClassNotFoundException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
 		}
 	}
 }
