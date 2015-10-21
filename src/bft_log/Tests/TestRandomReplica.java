@@ -16,14 +16,14 @@ import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.pedersen.CmtPeders
 import edu.biu.scapi.primitives.dlog.DlogGroup;
 import edu.biu.scapi.primitives.dlog.miracl.MiraclDlogECF2m;
 
-public class TestSSLCommitToPrimary {
+public class TestRandomReplica {
 	private Map<String, Channel> primaryCh;
 	private CmtCommitter committer = null;
 	private DlogGroup dlog = null;
 	private CmtCommitValue val = null;
 	private long idCmt;
 	
-	public TestSSLCommitToPrimary(Map<String, Channel> primaryChannel){
+	public TestRandomReplica(Map<String, Channel> primaryChannel){
 		this.primaryCh = primaryChannel;
 		this.idCmt = 2;
 	}

@@ -37,7 +37,7 @@ import edu.biu.scapi.primitives.dlog.DlogGroup;
 import edu.biu.scapi.primitives.dlog.miracl.MiraclDlogECF2m;
 import javafx.scene.control.ListCell;
 
-public class TestSSLPrimary {
+public class TestRandomDemo {
 	public static void main(String[] args) throws SSLException, DuplicatePartyException, IOException, TimeoutException{
 		if (args.length < 1) {
             System.out.println("Usage: TestSSLPrimary <server1 id>");
@@ -45,7 +45,7 @@ public class TestSSLPrimary {
         }
 		ComputationConfig conf = new ComputationConfig();
 		int myId = Integer.valueOf(args[0]);
-		int primaryIndex = 0;
+		int primaryIndex = 0;	//TODO This should be loaded dynamically
 		List<Host> list = conf.listServer;
 		Host primary = conf.listServer.get(primaryIndex);
 			
@@ -89,7 +89,7 @@ public class TestSSLPrimary {
 			ArrayList<CmtRCommitPhaseOutput> listCommit = new ArrayList<>();
 			
 			//Update the list with the received commitments
-    	    TestSSLCommitSelector testCmtSel = new TestSSLCommitSelector(connections);
+    	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections);
     	    listCommit = testCmtSel.waitCommitments(listCommit);
     	    
     	    
@@ -108,7 +108,7 @@ public class TestSSLPrimary {
 			Map<String, Channel> primaryCh = connections.get(listOfParties.get(myId));
 			ArrayList<CmtRCommitPhaseOutput> listCommit = null;
 			
-			TestSSLCommitToPrimary cmtToPrimary = new TestSSLCommitToPrimary(primaryCh);
+			TestRandomReplica cmtToPrimary = new TestRandomReplica(primaryCh);
 			cmtToPrimary.sendToPrimary(myId);
 			
 			//Receive the selected commit from the primary node
