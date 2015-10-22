@@ -1,43 +1,31 @@
-package bft_log.Tests;
+package bft_log.Tests.OptimizedRandomGen;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-
-import com.sun.corba.se.impl.ior.GenericTaggedComponent;
-
 import edu.biu.scapi.comm.Channel;
 import edu.biu.scapi.comm.twoPartyComm.PartyData;
 import edu.biu.scapi.exceptions.InvalidDlogGroupException;
 import edu.biu.scapi.exceptions.SecurityLevelException;
+import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtCommitValue;
 import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtRCommitPhaseOutput;
 import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtReceiver;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.pedersen.CmtPedersenReceiver;
 import edu.biu.scapi.primitives.dlog.DlogGroup;
 import edu.biu.scapi.primitives.dlog.miracl.MiraclDlogECF2m;
 
 public class TestRandomPrimary {
 	private Map<PartyData, Map<String, Channel>> connections;
-	private ArrayList<CmtReceiver> receiverList = null;
     private DlogGroup dlog = null;
 	private Hashtable<Integer, TestRandomShareCommitMsg> valueTable;
 
     public TestRandomPrimary (Map<PartyData, Map<String, Channel>> conn){
 		this.connections = conn;
-		receiverList = new ArrayList<>();
 		valueTable = new Hashtable<Integer, TestRandomShareCommitMsg>();
-	}
-	
-	public ArrayList<CmtReceiver> getReceiverList() {
-		return receiverList;
 	}
 
 	public void waitCommitments() throws IllegalArgumentException, IOException{
-		
 		while(true){
 	    	 for (PartyData m : connections.keySet()){
 	    		Map<String, Channel> i = connections.get(m);
@@ -46,7 +34,6 @@ public class TestRandomPrimary {
     	    	while(it.hasNext()){
     				try {
     					CmtReceiver receiver = new MyCmtReceiver((Channel) it.next(), dlog, new SecureRandom());
-    					receiverList.add(receiver);
     					System.out.println(((MyCmtReceiver)receiver).getH());
     					
     		    	    //Receive the commitment on the commit value
@@ -77,11 +64,40 @@ public class TestRandomPrimary {
 				try {
 					((Channel)it.next()).send(this.valueTable);
 					System.out.println("Table Sent Successfully!");
+					break;
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 		}
+		receiveDecommitments();
+	}
+	
+	private void receiveDecommitments(){
+		for( Integer i : valueTable.keySet()){
+			for (PartyData m : connections.keySet()){
+				if (m.hashCode() == i){
+					Map<String, Channel> map = connections.get(m);
+					Iterator it = map.values().iterator();
+					while(it.hasNext()){
+						try {
+							CmtReceiver receiver = new MyCmtReceiver((Channel) it.next(), dlog, new SecureRandom());
+							((MyCmtReceiver)receiver).setH(valueTable.get(i).getH());
+							((MyCmtReceiver)receiver).setPreviouslyCommittedValues(valueTable);
+							CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(2, m.hashCode());
+							
+							String committedString = new String(receiver.generateBytesFromCommitValue(val));
+	
+						    System.out.println(committedString);
+						} catch (SecurityLevelException | InvalidDlogGroupException | IOException | ClassNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+		
 	}
 }

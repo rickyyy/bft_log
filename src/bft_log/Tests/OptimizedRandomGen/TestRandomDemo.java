@@ -1,13 +1,9 @@
-package bft_log.Tests;
+package bft_log.Tests.OptimizedRandomGen;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -19,23 +15,9 @@ import bft_log.Host;
 import edu.biu.scapi.comm.Channel;
 import edu.biu.scapi.comm.multiPartyComm.MultipartyCommunicationSetup;
 import edu.biu.scapi.comm.multiPartyComm.SSLSocketMultipartyCommunicationSetup;
-import edu.biu.scapi.comm.twoPartyComm.LoadSocketParties;
 import edu.biu.scapi.comm.twoPartyComm.PartyData;
 import edu.biu.scapi.comm.twoPartyComm.SocketPartyData;
-import edu.biu.scapi.exceptions.CheatAttemptException;
-import edu.biu.scapi.exceptions.CommitValueException;
 import edu.biu.scapi.exceptions.DuplicatePartyException;
-import edu.biu.scapi.exceptions.InvalidDlogGroupException;
-import edu.biu.scapi.exceptions.SecurityLevelException;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtCommitValue;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtCommitter;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtRCommitPhaseOutput;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtReceiver;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.pedersen.CmtPedersenCommitter;
-import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.pedersen.CmtPedersenReceiver;
-import edu.biu.scapi.primitives.dlog.DlogGroup;
-import edu.biu.scapi.primitives.dlog.miracl.MiraclDlogECF2m;
-import javafx.scene.control.ListCell;
 
 public class TestRandomDemo {
 	public static void main(String[] args) throws SSLException, DuplicatePartyException, IOException, TimeoutException{
@@ -47,7 +29,6 @@ public class TestRandomDemo {
 		int myId = Integer.valueOf(args[0]);
 		int primaryIndex = 0;	//TODO This should be loaded dynamically
 		List<Host> list = conf.listServer;
-		Host primary = conf.listServer.get(primaryIndex);
 			
 		//Just because in the config file there is one server more than needed. We want to remove it from here because we do not use it.
 		list.remove(4);
@@ -59,6 +40,8 @@ public class TestRandomDemo {
 			PartyData p = new SocketPartyData(ip, port);
 			listOfParties.add(p);
 		}
+		
+		PartyData myself = listOfParties.get(myId);
 		
 		//Based on the myId value, it is defined what is the current running node (this is done in case of having a single properties file for all the servers)
 		//In case the server has its own file, as long as it is properly ordered (i.e., it has its own IP as IP0) it is also fine.
@@ -85,9 +68,6 @@ public class TestRandomDemo {
 		
 		if (primaryIndex==myId){	//I am the primary node
 			
-			//Create the list that will store the commitments
-			ArrayList<CmtRCommitPhaseOutput> listCommit = new ArrayList<>();
-			
 			//Update the list with the received commitments
     	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections);
     	    testCmtSel.waitCommitments();
@@ -106,10 +86,11 @@ public class TestRandomDemo {
 			
 			//Take the channel to the primary node
 			Map<String, Channel> primaryCh = connections.get(listOfParties.get(myId));
-			ArrayList<CmtRCommitPhaseOutput> listCommit = null;
 			
-			TestRandomReplica cmtToPrimary = new TestRandomReplica(primaryCh);
+			TestRandomReplica cmtToPrimary = new TestRandomReplica(primaryCh, myself);
 			cmtToPrimary.sendToPrimary(myId);
+			cmtToPrimary.send(connections);
+			//TODO Until here it works. Now we have to verify the commit message.
 			
 			//Receive the selected commit from the primary node
 //			for (Channel i : primaryCh.values()){

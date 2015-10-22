@@ -1,8 +1,8 @@
-package bft_log.Tests;
+package bft_log.Tests.OptimizedRandomGen;
 
 import java.io.Serializable;
 
-import edu.biu.scapi.primitives.dlog.GroupElement;
+import edu.biu.scapi.interactiveMidProtocols.commitmentScheme.CmtCCommitmentMsg;
 import edu.biu.scapi.primitives.dlog.GroupElementSendableData;
 
 public class TestRandomShareCommitMsg implements Serializable{
@@ -11,10 +11,10 @@ public class TestRandomShareCommitMsg implements Serializable{
 	 */
 	private static final long serialVersionUID = 3499473595604018380L;
 	private long queryId;	//Identified used later on for the decommit phase
-	private GroupElementSendableData commitMsg;	//C - The real committed value
+	private CmtCCommitmentMsg commitMsg;	//C - The real committed value
 	private GroupElementSendableData h;
 	
-	public TestRandomShareCommitMsg(long id, GroupElementSendableData c, GroupElementSendableData h){
+	public TestRandomShareCommitMsg(long id, CmtCCommitmentMsg c, GroupElementSendableData h){
 		this.queryId = id;
 		this.commitMsg = c;
 		this.h = h;
@@ -24,7 +24,7 @@ public class TestRandomShareCommitMsg implements Serializable{
 		return queryId;
 	}
 
-	public GroupElementSendableData getCommitMsg() {
+	public CmtCCommitmentMsg getCommitMsg() {
 		return commitMsg;
 	}
 
