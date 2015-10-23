@@ -44,7 +44,7 @@ public class QueryClient {
 		
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
-		items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
+		//items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
 		items.add("Test2");
 		String operation = "count";
 		

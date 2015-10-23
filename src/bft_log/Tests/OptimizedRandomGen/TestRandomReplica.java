@@ -29,9 +29,9 @@ public class TestRandomReplica {
 	private DlogGroup dlog = null;
 	private CmtCommitValue val = null;
 	private long idCmt;
-	private Hashtable<Integer, TestRandomShareCommitMsg> valueTable = null;
+	private TableCommit valueTable = null;
 	private Hashtable<Integer, Integer> otherCommitments;
-	private long myCommittedValue;
+	private int myCommittedValue;
 
 	public TestRandomReplica(Map<String, Channel> primaryChannel, PartyData myId){
 		this.primaryCh = primaryChannel;
@@ -40,16 +40,16 @@ public class TestRandomReplica {
 		this.otherCommitments = new Hashtable<>();
 		SecureRandom r = new SecureRandom();
 		try {
-			this.myCommittedValue = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt();
+			this.myCommittedValue = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt(10000);
 		} catch (NoSuchAlgorithmException | NoSuchProviderException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
 	
-	public void send(Map<PartyData, Map<String, Channel>> connections){
+	public Integer send(Map<PartyData, Map<String, Channel>> connections){
 		for( Integer i : valueTable.keySet()){
-			if (i == myself.hashCode()){ // I have to send because I was selected by the primary
+			if (i == Math.abs(myself.hashCode())){ // I have to send because I was selected by the primary
 				for (PartyData m : connections.keySet()){
 					if (m!=myself){
 						Map <String, Channel> map = connections.get(m);
@@ -69,7 +69,7 @@ public class TestRandomReplica {
 				}
 			} else {	//I have to receive the message from the node that is responsible for the decommitment.
 				for (PartyData m : connections.keySet()){
-					if (m.hashCode() == i){
+					if (Math.abs(m.hashCode()) == i){
 						Map<String, Channel> map = connections.get(m);
 						Iterator it = map.values().iterator();
 						while(it.hasNext()){
@@ -77,11 +77,11 @@ public class TestRandomReplica {
 								CmtReceiver receiver = new MyCmtReceiver((Channel) it.next(), dlog, new SecureRandom());
 								((MyCmtReceiver)receiver).setH(this.valueTable.get(i).getH());
 								((MyCmtReceiver)receiver).setPreviouslyCommittedValues(valueTable);
-								CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(idCmt, m.hashCode());
+								CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(idCmt, Math.abs(m.hashCode()));
 								
 								String committedString = new String(receiver.generateBytesFromCommitValue(val));
-								if (!otherCommitments.containsKey(m.hashCode())){
-									otherCommitments.put(m.hashCode(), Integer.valueOf(committedString));
+								if (!otherCommitments.containsKey(Math.abs(m.hashCode()))){
+									otherCommitments.put(Math.abs(m.hashCode()), Integer.valueOf(committedString));
 								}
 							    System.out.println(committedString);
 							} catch (SecurityLevelException | InvalidDlogGroupException | IOException | ClassNotFoundException e) {
@@ -97,6 +97,7 @@ public class TestRandomReplica {
 			myCommittedValue += i;
 		}
 		System.out.println("Distributed Random Number Generated: " + Math.abs(myCommittedValue));
+		return Math.abs(myCommittedValue);
 	}
 	
 	public void sendToPrimary(int myId){
@@ -126,12 +127,13 @@ public class TestRandomReplica {
 		receiveCmtTable();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void receiveCmtTable(){
 		System.out.println("Waiting for the Committed Table chosen by the primary ...");
 		while (true){
 			for (Channel i : primaryCh.values()){
 				try {
-					this.valueTable = (Hashtable<Integer, TestRandomShareCommitMsg>)i.receive();
+					this.valueTable = (TableCommit)i.receive();
 					if (this.valueTable!=null){
 						System.out.println("Committed Table Received!");
 						System.out.println(valueTable.toString());

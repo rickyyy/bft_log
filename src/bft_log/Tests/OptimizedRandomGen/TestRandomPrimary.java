@@ -18,11 +18,14 @@ import edu.biu.scapi.primitives.dlog.miracl.MiraclDlogECF2m;
 public class TestRandomPrimary {
 	private Map<PartyData, Map<String, Channel>> connections;
     private DlogGroup dlog = null;
-	private Hashtable<Integer, TestRandomShareCommitMsg> valueTable;
+	private TableCommit valueTable;
+	private Hashtable<Integer, Integer> otherCommitments;
+	private int myCommittedValue;
 
     public TestRandomPrimary (Map<PartyData, Map<String, Channel>> conn){
 		this.connections = conn;
-		valueTable = new Hashtable<Integer, TestRandomShareCommitMsg>();
+		valueTable = new TableCommit();
+		this.otherCommitments = new Hashtable<>();
 	}
 
 	public void waitCommitments() throws IllegalArgumentException, IOException{
@@ -41,7 +44,7 @@ public class TestRandomPrimary {
     		    	    
     		    	    //Get information to add at the hashtable of the primary
     					TestRandomShareCommitMsg msg = ((MyCmtReceiver)receiver).getCommMap();
-    					valueTable.put(m.hashCode(), msg);
+    					valueTable.put(Math.abs(m.hashCode()), msg);
     					
 		    	    	break;
     				}catch (SecurityLevelException | InvalidDlogGroupException | ClassNotFoundException | IOException e) {
@@ -56,6 +59,7 @@ public class TestRandomPrimary {
 		sendChosenCmt();
 	}
 	
+	//TODO Now it sends all the commitments back to user.
 	private void sendChosenCmt(){
 		System.out.println("Sending Table to replicas ... ");
 		for (Map<String, Channel> i : connections.values()){
@@ -63,7 +67,7 @@ public class TestRandomPrimary {
 			while(it.hasNext()){
 				try {
 					((Channel)it.next()).send(this.valueTable);
-					System.out.println("Table Sent Successfully!");
+					System.out.println("Table Sent Successfully! : " + this.valueTable);
 					break;
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -71,13 +75,14 @@ public class TestRandomPrimary {
 				}
 			}
 		}
-		receiveDecommitments();
+		myCommittedValue = receiveDecommitments();
+		System.out.println(myCommittedValue);
 	}
 	
-	private void receiveDecommitments(){
+	public Integer receiveDecommitments(){
 		for( Integer i : valueTable.keySet()){
 			for (PartyData m : connections.keySet()){
-				if (m.hashCode() == i){
+				if (Math.abs(m.hashCode()) == i){
 					Map<String, Channel> map = connections.get(m);
 					Iterator it = map.values().iterator();
 					while(it.hasNext()){
@@ -85,11 +90,14 @@ public class TestRandomPrimary {
 							CmtReceiver receiver = new MyCmtReceiver((Channel) it.next(), dlog, new SecureRandom());
 							((MyCmtReceiver)receiver).setH(valueTable.get(i).getH());
 							((MyCmtReceiver)receiver).setPreviouslyCommittedValues(valueTable);
-							CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(2, m.hashCode());
+							CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(2, Math.abs(m.hashCode()));
 							
 							String committedString = new String(receiver.generateBytesFromCommitValue(val));
-	
+							if (!otherCommitments.containsKey(Math.abs(m.hashCode()))){
+								otherCommitments.put(Math.abs(m.hashCode()), Integer.valueOf(committedString));
+							}
 						    System.out.println(committedString);
+
 						} catch (SecurityLevelException | InvalidDlogGroupException | IOException | ClassNotFoundException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -98,6 +106,11 @@ public class TestRandomPrimary {
 				}
 			}
 		}
+		for (Integer i : otherCommitments.values()){
+			myCommittedValue += i;
+		}
+		System.out.println("Distributed Random Number Generated: " + Math.abs(myCommittedValue));
+		return Math.abs(myCommittedValue);
 		
 	}
 }

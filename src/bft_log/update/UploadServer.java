@@ -46,7 +46,7 @@ public class UploadServer {
 	private PublicKey pk;
 	private PrivateKey sk;
 	
-	//Constructor without crypto keys
+	//Normal constructor
 	public UploadServer(int id) throws IOException, ClassNotFoundException{
 		this.id = id;
 		this.conf = new ComputationConfig();
@@ -243,6 +243,7 @@ public class UploadServer {
 	}
 	
 	public void executionQuerySetup(QueryMessage q){
+		System.out.println("Query ID : " + q.id);
 		execTbl.insertExpectedNumItemsQuery(q.id, q.requestedItems.size());
 	}	
 	

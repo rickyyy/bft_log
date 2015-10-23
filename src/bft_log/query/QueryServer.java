@@ -24,6 +24,7 @@ import bft_log.Log;
 import bft_log.Utils;
 import bft_log.query.execution.ApprovedExecution;
 import bft_log.update.UploadServer;
+import bftsmart.consensus.executionmanager.LeaderModule;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.server.defaultservices.DefaultRecoverable;
 import edu.biu.scapi.comm.twoPartyComm.SSLSocketCommunicationSetup;
@@ -180,8 +181,16 @@ public class QueryServer extends DefaultRecoverable {
 					
 					//Compute (deterministically) who is the Execution Node, and add this value to the request.
 					//TODO if the random value is -1 (default value): then here should run the distributed random protocol.
-					
-					int executionNode = mapToNode(q.rand, q.MAX_SIZE);
+					int executionNode = -1;
+					if (q.rand == -1){
+						int systemRandomNumber = -1;
+						DistributedRandomNumberGenerator num = new DistributedRandomNumberGenerator(config, myId);
+						systemRandomNumber = num.runProtocol();
+						q.setRand(systemRandomNumber);
+						executionNode = mapToNode(q.rand, q.MAX_SIZE);
+					} else {
+						executionNode = mapToNode(q.rand, q.MAX_SIZE);
+					}
 					q.setExecutionNode(executionNode);
 					
 					//Add the Query request to the log.

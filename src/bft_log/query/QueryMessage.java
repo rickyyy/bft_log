@@ -63,7 +63,7 @@ public class QueryMessage implements java.io.Serializable {
 	
 	@Override
 	public String toString() {
-		return "Query [requestedItems=" + requestedItems + ", operation=" + operation + ", ts=" + ts + ", Random=" + rand + ", Execution Node= " + executionNode + "]";
+		return "Query [id= " + id + ", requestedItems=" + requestedItems + ", operation=" + operation + ", ts=" + ts + ", Random=" + rand + ", Execution Node= " + executionNode + "]";
 	}
 	
 	public int getExecutionNode() {
@@ -74,6 +74,14 @@ public class QueryMessage implements java.io.Serializable {
 		this.executionNode = executionNode;
 	}
 	
+	public int getRand() {
+		return rand;
+	}
+
+	public void setRand(int rand) {
+		this.rand = rand;
+	}
+
 	//Mainly used for debug.
 	public void printQuery(){
 		Iterator<String> iter = this.requestedItems.iterator();
