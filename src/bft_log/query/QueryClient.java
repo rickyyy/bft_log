@@ -45,7 +45,7 @@ public class QueryClient {
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
 		//items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
-		items.add("Test2");
+		items.add("Test1");
 		String operation = "count";
 		
 		//Generate a key pair for the client
@@ -123,7 +123,6 @@ public class QueryClient {
 			    // ignore close exception
 			}
 		}
-		
 		return finalResult;
 	}
 }

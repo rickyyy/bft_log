@@ -21,11 +21,13 @@ public class TestRandomPrimary {
 	private TableCommit valueTable;
 	private Hashtable<Integer, Integer> otherCommitments;
 	private int myCommittedValue;
+	private int idCmt;
 
     public TestRandomPrimary (Map<PartyData, Map<String, Channel>> conn){
 		this.connections = conn;
 		valueTable = new TableCommit();
 		this.otherCommitments = new Hashtable<>();
+		this.idCmt = 2;	//TODO To have the Id of the query here, and not a fixed number.
 	}
 
 	public void waitCommitments() throws IllegalArgumentException, IOException{
@@ -75,8 +77,6 @@ public class TestRandomPrimary {
 				}
 			}
 		}
-		myCommittedValue = receiveDecommitments();
-		System.out.println(myCommittedValue);
 	}
 	
 	public Integer receiveDecommitments(){
@@ -88,16 +88,15 @@ public class TestRandomPrimary {
 					while(it.hasNext()){
 						try {
 							CmtReceiver receiver = new MyCmtReceiver((Channel) it.next(), dlog, new SecureRandom());
-							((MyCmtReceiver)receiver).setH(valueTable.get(i).getH());
+							((MyCmtReceiver)receiver).setH(this.valueTable.get(i).getH());
 							((MyCmtReceiver)receiver).setPreviouslyCommittedValues(valueTable);
-							CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(2, Math.abs(m.hashCode()));
+							CmtCommitValue val = ((MyCmtReceiver)receiver).receiveDecommitment(idCmt, Math.abs(m.hashCode()));
 							
 							String committedString = new String(receiver.generateBytesFromCommitValue(val));
 							if (!otherCommitments.containsKey(Math.abs(m.hashCode()))){
 								otherCommitments.put(Math.abs(m.hashCode()), Integer.valueOf(committedString));
 							}
 						    System.out.println(committedString);
-
 						} catch (SecurityLevelException | InvalidDlogGroupException | IOException | ClassNotFoundException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -111,6 +110,5 @@ public class TestRandomPrimary {
 		}
 		System.out.println("Distributed Random Number Generated: " + Math.abs(myCommittedValue));
 		return Math.abs(myCommittedValue);
-		
 	}
 }

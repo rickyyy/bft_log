@@ -36,11 +36,11 @@ public class TestRandomReplica {
 	public TestRandomReplica(Map<String, Channel> primaryChannel, PartyData myId){
 		this.primaryCh = primaryChannel;
 		this.myself = myId;
-		this.idCmt = 2;
+		this.idCmt = 2;	//TODO To have the Id of the query here, and not a fixed number.
 		this.otherCommitments = new Hashtable<>();
 		SecureRandom r = new SecureRandom();
 		try {
-			this.myCommittedValue = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt(10000);
+			this.myCommittedValue = SecureRandom.getInstance("SHA1PRNG", "SUN").nextInt((int) Math.pow(2.0, 16.0));
 		} catch (NoSuchAlgorithmException | NoSuchProviderException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
