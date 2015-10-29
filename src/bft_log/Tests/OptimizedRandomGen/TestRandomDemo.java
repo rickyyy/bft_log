@@ -2,6 +2,7 @@ package bft_log.Tests.OptimizedRandomGen;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,11 +73,11 @@ public class TestRandomDemo {
 		
 		System.out.println(connections);
 		System.out.println("All connections are established");
-		
+		System.out.println("Time starting the protocol: " + LocalDateTime.now());
 		if (primaryIndex==myId){	//I am the primary node
 			
 			//Update the list with the received commitments
-    	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections);
+    	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections, conf);
     	    testCmtSel.waitCommitments();
     	    
 		} else {	//I am one of the other nodes. I have to commit. If I am selected, I then decommit.

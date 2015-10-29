@@ -29,18 +29,23 @@ public class ExecutionTable extends Hashtable<Integer, ArrayList<ReceivedShare>>
 	
 	public boolean readyToReconstruction(int idQuery){
 		boolean ready = false;
-		int size = expectedNumItemsQuery.get(idQuery);
-		ArrayList<ReceivedShare> list = this.get(idQuery);
-		if (list.size()!=size){
-			return ready;
-		} else {
-			for (ReceivedShare s : list){
-				if(s.getCounter() < conf.t){
-					return ready;
+		try {
+			int size = expectedNumItemsQuery.get(idQuery);	//TODO this raise a NullPointerException. It has to be handled and tell to the replicas to wait.
+			ArrayList<ReceivedShare> list = this.get(idQuery);
+			if (list.size()!=size){
+				return ready;
+			} else {
+				for (ReceivedShare s : list){
+					if(s.getCounter() < conf.t){
+						return ready;
+					}
 				}
+				ready = true;
+				return ready;
 			}
-			ready = true;
-			return ready;
+		} catch (NullPointerException e) {
+			System.err.println("NullPointerException (sent to early): " + e);
+			return false;
 		}
 	}
 	

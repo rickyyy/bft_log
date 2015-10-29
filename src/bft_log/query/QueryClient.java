@@ -17,6 +17,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public class QueryClient {
 		
 		//Set an example of data items to analyze (its ID for example) and the operation to compute on it.
 		Set<String> items = new HashSet<String>();
-		//items.add("Riccardo_Bortolameotti_NSS_2015.pdf");
+		items.add("Test2");
 		items.add("Test1");
 		String operation = "count";
 		
@@ -91,6 +92,7 @@ public class QueryClient {
 		try {
 			//q.requestedItems.add("Malicious.txt"); //Uncomment to simulate an attack that tries to modify the real query
 			out = new ObjectOutputStream(bos);
+			System.out.println("NOW is the time the query has been sent: " + LocalDateTime.now());
 			out.writeObject(q);
 			byte[] reply = proxy.invokeOrdered(bos.toByteArray());
 			if (reply != null){
@@ -103,6 +105,7 @@ public class QueryClient {
 					int attempt = 0;
 						System.out.print("Asking the server for the Result: " + String.valueOf(attempt));
 						finalResult = rf.sendResultRequest();
+						System.out.println("NOW is the time the result has been arrived: " + LocalDateTime.now());
 						System.out.println(finalResult);
 					return finalResult;
 				}

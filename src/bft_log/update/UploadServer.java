@@ -3,6 +3,7 @@ package bft_log.update;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -14,6 +15,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -54,7 +56,6 @@ public class UploadServer {
 		this.store = new Hashtable<Integer, ShareStorage>();
 		this.execTbl = new ExecutionTable(this.conf);
 		this.resTbl = new Hashtable<Integer, String>();
-		//System.out.println("Starting Upload Server ID: " + String.valueOf(this.id));
 	}
 	
 	//Constructor that uses crypto.
@@ -119,9 +120,9 @@ public class UploadServer {
 				}
 				
 			//Procedure to handle Execution messages. Only one node per request (= Execution Node) runs these operations.
+				//TODO There is a bug of synchrony. Fix it.
 			} else if (obj instanceof ExecutionMessage){
 				ExecutionMessage exec = (ExecutionMessage) obj;
-				
 				//TODO check if servers messages are validated or not.
 				
 				execTbl.updateTable(exec);
@@ -140,13 +141,14 @@ public class UploadServer {
 					for (ReceivedShare s : list){
 						reconstructAontPackage(s.getIdShare().hashCode());
 					}
+					
+					//The result is stored locally at Execution Node. It will wait until the client will ask for the result.
+					runOperation(exec.getQueryID(), "concat");
+					exec.setReadyToReceiveShare(true);
+					outToClient.writeObject(exec);
 				}
 				
-				//The result is stored locally at Execution Node. It will wait until the client will ask for the result.
-				runOperation(exec.getQueryID(), "concat");
 				outToClient.writeObject(exec);
-				
-
 			//Sends back the result to the client. TODO purge results from memory after client requested them.
 			} else if (obj instanceof Result){
 				Result res = (Result) obj;
@@ -154,6 +156,7 @@ public class UploadServer {
 				res.setResult(resultOperation);
 				System.out.println(res.getResult());
 				outToClient.writeObject(res);
+				clean();
 			}
 			
 			//Unrecognized message
@@ -167,7 +170,7 @@ public class UploadServer {
 	
 	//The Execution server runs the requested operation by the query. The operation is implemented
 	//in a rough way. We just concatenate the two files. 
-	private void runOperation(int idQuery, String operation){
+	private void runOperation(int idQuery, String operation) throws IOException{
 		int numberFiles = execTbl.getExpectedNumItemsQuery(idQuery);
 		ArrayList<ReceivedShare> list = execTbl.get(idQuery);
 		ArrayList<String> nameFiles = new ArrayList<>();
@@ -235,8 +238,8 @@ public class UploadServer {
 			File fileToDecode = new File(pathReconstructed + ".decoded");
 			Aont encodedAont = new Aont(fileToDecode);
 			encodedAont.AontDecoding(encodedAont.aontPackage, pathReconstructed);
-			fileToDecode.delete();
 			rsr.ShardDeletion(this.id);
+			System.out.println("NOW is the time the data has been reconstructed in the clear: " + LocalDateTime.now());
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 			System.err.println("Error during the reconstruction of AONT package : " + String.valueOf(idFileRequested) + " " + e.getMessage());
 		}
@@ -272,7 +275,8 @@ public class UploadServer {
 				
 				//Receive the response from the Execution Node.
 				//TODO Need to be implemented properly. So far it just receives back what he sent.
-				ExecutionMessage miao = (ExecutionMessage) in.readObject();
+				Object miao = in.readObject();
+				
 				
 				//Close the connection.
 				sock.close();
@@ -281,5 +285,17 @@ public class UploadServer {
 			}
 		}
 	}
+	
+	private void clean(){
+		File myFolder = new File(this.serverDiskPath);
+		File[] listOfFiles = myFolder.listFiles();
+		for (int i=0; i<listOfFiles.length; i++){
+			String fileName = listOfFiles[i].getName();
+			if (!fileName.endsWith(".share" + this.id)){
+				listOfFiles[i].delete();
+			}
+		}
+	}
 }
+
 

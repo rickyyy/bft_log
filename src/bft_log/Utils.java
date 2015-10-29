@@ -78,7 +78,7 @@ public class Utils implements Serializable {
 		return Arrays.equals(verify, digest);
 	}
 	
-	public byte[] getBytesFromFile(File f) throws FileNotFoundException{
+	public byte[] getBytesFromFile(File f) throws IOException{
 		byte[] fileToBytes;
 		FileInputStream fis = new FileInputStream(f);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -91,6 +91,8 @@ public class Utils implements Serializable {
 			System.out.println("Error while transforming the file into a bytes array.");
 		}
 		fileToBytes = bos.toByteArray();
+		bos.close();
+		fis.close();
 		return fileToBytes;
 	}
 	

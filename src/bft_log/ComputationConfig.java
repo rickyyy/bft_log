@@ -24,8 +24,8 @@ public class ComputationConfig {
 	public LeaderModule getLm() {
 		return lm;
 	}
-	
-	//TODO not in use yet. To fix and to check whether we really need it or not.
+
+//TODO not in use yet. To fix and to check whether we really need it or not.
 //	public ArrayList<Host> aliveServerList(){
 //		HostsConfig hc = new HostsConfig(appPath+"config", "hosts_upload_port.txt");
 //		listServer = new ArrayList<Host>();

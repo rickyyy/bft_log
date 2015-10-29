@@ -25,18 +25,27 @@ public class ExecutionMessage implements Serializable{
 	private int executionNode;
 	private int sendingNode;
 	private byte[] shardSent;
+	private boolean readyToReceiveShare;
 	
 	public ExecutionMessage(QueryMessage q){
 		this.queryID = q.id;
 		this.clientRequestSignature = q.signedDigest;
 		this.executionNode = q.executionNode;
+		this.readyToReceiveShare = false;
 	}
 
 	
+	public boolean isReadyToReceiveShare() {
+		return readyToReceiveShare;
+	}
+
+	public void setReadyToReceiveShare(boolean readyToReceiveShare) {
+		this.readyToReceiveShare = readyToReceiveShare;
+	}
+
 	public int getQueryID() {
 		return queryID;
 	}
-
 
 	public int getSendingNode() {
 		return sendingNode;

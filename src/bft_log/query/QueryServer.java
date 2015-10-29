@@ -188,10 +188,7 @@ public class QueryServer extends DefaultRecoverable {
 						DistributedRandomNumberGenerator num = new DistributedRandomNumberGenerator(config, myId);
 						systemRandomNumber = num.runProtocol();
 						q.setRand(systemRandomNumber);
-						if (config.getLm().getCurrentLeader()==myId){
-							System.out.println("I AM THE LEADER BITCHES");
-						}
-						executionNode = mapToNode(q.rand, q.MAX_SIZE);	//just because in our testing now we have 3 commitments.
+						executionNode = mapToNode(q.rand, q.MAX_SIZE);	
 					} else {
 						executionNode = mapToNode(q.rand, q.MAX_SIZE);
 					}

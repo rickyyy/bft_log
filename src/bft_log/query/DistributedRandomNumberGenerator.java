@@ -35,6 +35,7 @@ public class DistributedRandomNumberGenerator {
 		setupConnections();
 	}
 	
+	
 	private void setupConnections(){
 		listOfParties = new ArrayList<>();
 		List<Host> list = conf.listServer;
@@ -80,7 +81,7 @@ public class DistributedRandomNumberGenerator {
 		if (primaryIndex==myId){	//I am the primary node
 					
 			//Update the list with the received commitments
-    	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections);
+    	    TestRandomPrimary testCmtSel = new TestRandomPrimary(connections, conf);
     	    testCmtSel.waitCommitments();
     	    return testCmtSel.receiveDecommitments();
     	    

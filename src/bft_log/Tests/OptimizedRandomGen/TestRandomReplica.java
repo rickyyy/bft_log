@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -96,6 +97,7 @@ public class TestRandomReplica {
 		for (Integer i : otherCommitments.values()){
 			myCommittedValue += i;
 		}
+		System.out.println("Time finishing the protocol: " + LocalDateTime.now());
 		System.out.println("Distributed Random Number Generated: " + Math.abs(myCommittedValue));
 		return Math.abs(myCommittedValue);
 	}

@@ -35,7 +35,7 @@ public class Aont {
 	}
 	
 	//Constructor, when you receive an "already prepared" Aont Package and you just need to "decode" it.
-	public Aont(File f) throws FileNotFoundException{
+	public Aont(File f) throws IOException{
 		ut = new Utils();
 		this.aontPackage = ut.getBytesFromFile(f);
 	}
@@ -51,7 +51,7 @@ public class Aont {
 		try {
 			this.aontPackage = getBytesFromFile(f);
 			this.aontPackage = appendCanaryToData();
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
@@ -98,7 +98,7 @@ public class Aont {
 	}
 	
 	//Decode a specific AONT Package and write the decoded file in the specified Path.
-	public byte[] AontDecoding(byte[] aontPackage, String pathFile) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
+	public void AontDecoding(byte[] aontPackage, String pathFile) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
 		//Compute the length of encrypted data. (= Subtract the size of the hash (i.e., SHA-256) from the AONT package)
 		int dataEncLength = aontPackage.length-(wordSize*2);	
 		byte[] dataEncrypted = new byte[dataEncLength];
@@ -155,7 +155,6 @@ public class Aont {
 		
 		//Write the decoded file on disk.
 		getFileFromBytes(originalFile, pathFile);
-		return originalFile;
 	}
 	
 	
@@ -201,7 +200,7 @@ public class Aont {
 		return res;
 	}
 	
-	public byte[] getBytesFromFile(File f) throws FileNotFoundException{
+	public byte[] getBytesFromFile(File f) throws IOException{
 		byte[] fileToBytes;
 		FileInputStream fis = new FileInputStream(f);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -214,6 +213,8 @@ public class Aont {
 			System.out.println("Error while transforming the file into a bytes array.");
 		}
 		fileToBytes = bos.toByteArray();
+		bos.close();
+		fis.close();
 		fileToBytes = addPaddingToData(fileToBytes);
 		return fileToBytes;
 	}

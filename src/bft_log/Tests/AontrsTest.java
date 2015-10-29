@@ -35,7 +35,7 @@ public class AontrsTest {
 			ReedSolomonShardGenerator rsg = new ReedSolomonShardGenerator(f1);
 			ReedSolomonShardReconstructor rsr = new ReedSolomonShardReconstructor(f1);
 			File f2 = new File(aontPackageFilePath + ".decoded");
-			byte[] decodedAont = test.AontDecoding(test.getBytesFromFile(f2), "/home/riccardo/git/bft_log/src/bft_log/Test1Decoded.txt");
+			test.AontDecoding(test.getBytesFromFile(f2), "/home/riccardo/git/bft_log/src/bft_log/Test1Decoded.txt");
 
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
 				| BadPaddingException e) {

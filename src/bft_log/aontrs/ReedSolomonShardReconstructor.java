@@ -94,6 +94,7 @@ public class ReedSolomonShardReconstructor {
         File decodedFile = new File(this.file.getParentFile(), this.file.getName() + ".decoded");
         OutputStream out = new FileOutputStream(decodedFile);
         out.write(allBytes, BYTES_IN_INT, fileSize);
+        out.close();
         System.out.println("Wrote " + decodedFile);
     }
     
